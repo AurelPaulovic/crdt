@@ -5,4 +5,6 @@ class NamedReplica(private val name: String) extends Replica {
     case (that: NamedReplica) => that.isInstanceOf[NamedReplica] && name == that.name
     case _ => false
   }
+  
+  override def toString(): String = s"NamedReplica[$name]"
 }
