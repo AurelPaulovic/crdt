@@ -31,18 +31,18 @@ class GCounter[T] private (val id: Id, private[this] val replica: Replica, priva
    * both fix the local replica value in the state to have value equal to localValue.
    */
   
-  protected lazy val state: GCounter.GCounterState[T] = new GCounter.GCounterState(payloadWithOutdatedLocal + (replica -> localValue))
+  lazy val state: GCounter.GCounterState[T] = new GCounter.GCounterState(payloadWithOutdatedLocal + (replica -> localValue))
 
   def increment(): GCounter[T] = new GCounter(id, replica, localValue + num.one, payloadWithOutdatedLocal)
     
   lazy val value: T = state.payload.foldLeft(num.zero)(_ + _._2)
   
-  def compare(other: GCounter[T]): Option[Boolean] = other.id match {
-    case `id` => Some(compare(other.state))
+  def leq(other: GCounter[T]): Option[Boolean] = other.id match {
+    case `id` => Some(leq(other.state))
     case _ => None
   }
 
-  def compare(other: GCounter.GCounterState[T]): Boolean = state.payload.forall {
+  def leq(other: GCounter.GCounterState[T]): Boolean = state.payload.forall {
     case (k, v) => v <= other.payload.getOrElse(k, -num.one)
   }
   
@@ -74,5 +74,5 @@ object GCounter {
     new GCounter(id, replica, initState.payload.getOrElse(replica, num.zero), initState.payload)
   }
   
-  protected[GCounter] class GCounterState[T: Numeric](protected[GCounter] val payload: immutable.Map[Replica, T])
+  protected[GCounter] case class GCounterState[T: Numeric](protected[GCounter] val payload: immutable.Map[Replica, T])
 }

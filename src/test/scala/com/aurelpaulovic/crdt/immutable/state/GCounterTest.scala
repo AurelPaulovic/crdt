@@ -90,9 +90,9 @@ class GCounterTest extends TestSpec {
 	    "be comparable with itself" in new Counter1 with Replica {
 	      val c1_2 = c1.increment
 	      
-	      assert(c1_2.compare(c1_2).isDefined)
-	      assert(c1_2.compare(c1).isDefined)
-	      assert(c1.compare(c1_2).isDefined)
+	      assert(c1_2.leq(c1_2).isDefined)
+	      assert(c1_2.leq(c1).isDefined)
+	      assert(c1.leq(c1_2).isDefined)
 	    }
 	    
 	    "have the newer value after merge with itself" in new Counter1 with Replica {
@@ -106,9 +106,9 @@ class GCounterTest extends TestSpec {
 	    "be comparable with itself and preserve the semilattice ordering" in new Counter1 with Replica {
 	      val c1_2 = c1.increment
 	      
-	      assert(c1_2.compare(c1_2).value == true)
-	      assert(c1_2.compare(c1).value == false)
-	      assert(c1.compare(c1_2).value == true)
+	      assert(c1_2.leq(c1_2).value == true)
+	      assert(c1_2.leq(c1).value == false)
+	      assert(c1.leq(c1_2).value == true)
 	    }
 	  }
 	  
@@ -126,8 +126,8 @@ class GCounterTest extends TestSpec {
 	  	  for (
 	  	    List(c1, c2) <- counters.combinations(2)
 	  	  ) {
-	  	    assert(c1.compare(c2).isDefined)
-	  	    assert(c2.compare(c1).isDefined)
+	  	    assert(c1.leq(c2).isDefined)
+	  	    assert(c2.leq(c1).isDefined)
 	  	  }
 	  	}
 	  	
@@ -148,8 +148,8 @@ class GCounterTest extends TestSpec {
   	    for (
 	  	    List(c1, c2) <- incremented.combinations(2)
 	  	  ) {
-	  	    assert(c1.compare(c2).isDefined)
-	  	    assert(c2.compare(c1).isDefined)
+	  	    assert(c1.leq(c2).isDefined)
+	  	    assert(c2.leq(c1).isDefined)
 	  	  }
 	  	}
 	  	
@@ -171,26 +171,26 @@ class GCounterTest extends TestSpec {
 	  	  val om12 = c1.merge(c2)
 	  	  val om21 = c2.merge(c1)
 	  	  
-	  	  assert(c1.compare(c2).value == false)
-	  	  assert(c2.compare(c1).value == false)
+	  	  assert(c1.leq(c2).value == false)
+	  	  assert(c2.leq(c1).value == false)
 	  	  
-	  	  assert((for(x <- om12; y <- om21; z <- x.compare(y)) yield z).value == true)
-	  	  assert((for(x <- om21; y <- om12; z <- x.compare(y)) yield z).value == true)
+	  	  assert((for(x <- om12; y <- om21; z <- x.leq(y)) yield z).value == true)
+	  	  assert((for(x <- om21; y <- om12; z <- x.leq(y)) yield z).value == true)
 	  	  
-	  	  assert((for(x <- om12; z <- x.compare(c1)) yield z).value == false)
-	  	  assert((for(x <- om12; z <- x.compare(c2)) yield z).value == false)
-	  	  assert((for(x <- om21; z <- x.compare(c1)) yield z).value == false)
-	  	  assert((for(x <- om21; z <- x.compare(c2)) yield z).value == false)
+	  	  assert((for(x <- om12; z <- x.leq(c1)) yield z).value == false)
+	  	  assert((for(x <- om12; z <- x.leq(c2)) yield z).value == false)
+	  	  assert((for(x <- om21; z <- x.leq(c1)) yield z).value == false)
+	  	  assert((for(x <- om21; z <- x.leq(c2)) yield z).value == false)
 	  	  
-	  	  assert((for(x <- om12; z <- c1.compare(x)) yield z).value == true)
-	  	  assert((for(x <- om12; z <- c2.compare(x)) yield z).value == true)
-	  	  assert((for(x <- om21; z <- c1.compare(x)) yield z).value == true)
-	  	  assert((for(x <- om21; z <- c2.compare(x)) yield z).value == true)
+	  	  assert((for(x <- om12; z <- c1.leq(x)) yield z).value == true)
+	  	  assert((for(x <- om12; z <- c2.leq(x)) yield z).value == true)
+	  	  assert((for(x <- om21; z <- c1.leq(x)) yield z).value == true)
+	  	  assert((for(x <- om21; z <- c2.leq(x)) yield z).value == true)
 	  	  
-	  	  assert(c1.compare(c1.increment).value == true)
-	  	  assert(c1.increment().compare(c1).value == false)
+	  	  assert(c1.leq(c1.increment).value == true)
+	  	  assert(c1.increment().leq(c1).value == false)
 	  	  
-	  	  assert(c1.compare(om12.value.increment).value == true)
+	  	  assert(c1.leq(om12.value.increment).value == true)
 	  	}
 	  }
 	}
@@ -202,8 +202,8 @@ class GCounterTest extends TestSpec {
 	  }
 	  
 	  "not be comparable" in new Counter1 with Counter2 with Replica {
-	    assert(c1.compare(c2) == None)
-	    assert(c2.compare(c1) == None)
+	    assert(c1.leq(c2) == None)
+	    assert(c2.leq(c1) == None)
 	  }
 	}
 }
