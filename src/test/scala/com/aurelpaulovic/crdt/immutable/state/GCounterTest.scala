@@ -49,172 +49,118 @@ class GCounterTest extends TestSpec {
 	
 	"A GCounter" when {
 	  "initialized to zero" should {
-	    var counter = GCounter[Int]("counter", new NamedReplica("rep")) 
-	    
-	    "have value 0" in {
-	      assert(counter.value == 0)
-	    }
-	    
-	    "have value = 1 after first increment" in {
-	      counter = counter.increment
-	      assert(counter.value == 1)
-	    }
-	    
-	    "have value = 2 after second increment" in {
-	      counter = counter.increment
-	      assert(counter.value == 2)
+	    "have value 0" in new Counter1 with Replica{
+	      assert(c1.value == 0)
 	    }
 	  }
 	  
 	  "initialized to 100" should {
 	    var counter = GCounter("counter", new NamedReplica("rep"), 100)
+	    
 	    "have value 100" in {
 	      assert(counter.value == 100)
 	    }
-	    
-	    "have value 101 after an increment" in {
-	      counter = counter.increment
-	      assert(counter.value == 101)
+	  }
+	  
+	  "incremented" should {
+	  	var counter = GCounter[Int]("counter", new NamedReplica("rep"))
+	  	var counter1 = GCounter("counter", new NamedReplica("rep"), 100)
+	  	
+	    "have correct value" in {
+	  		counter = counter.increment
+				assert(counter.value == 1)
+	      
+	  		counter = counter.increment
+	  		assert(counter.value == 2)
+	  		
+	      counter1 = counter1.increment
+	      assert(counter1.value == 101)
+	  		
+	  		counter1 = counter1.increment
+	      assert(counter1.value == 102)
 	    }
 	  }
 	  
-	  "with some value" should {
-	    "be mergable with itself" in new Counter1 with Replica {
-	      val c1_2 = c1.increment
+	  "having two replicas" should {
+	    "be mergable" in new MultiReplicas {
+	      def inner[T](c1: GCounter[T], c2: GCounter[T], sum: T) {
+	        assert(c1.merge(c2).isDefined)
+		      assert(c2.merge(c1).isDefined)
+		      
+		      assert(c1.merge(c2).map(_.value).value == sum)
+		      assert(c2.merge(c1).map(_.value).value == sum)
+	      }
 	      
-	      assert(c1_2.merge(c1_2).isDefined)
-	      assert(c1_2.merge(c1).isDefined)
-	      assert(c1.merge(c1_2).isDefined)
+	      val c1 = counters(0)
+	      val c2 = counters(1)
+	      val c1_2 = (1 to 10).foldLeft(c1)((c, _) => c.increment)
+	      val c2_2 = (1 to 5).foldLeft(c2)((c, _) => c.increment)
+	      
+	      inner(c1, c2, 0)
+	      inner(c2, c1, 0)
+	      inner(c1, c1, 0)
+	      inner(c1, c1.increment, 1)
+	      inner(c1_2, c2_2, 15)
+	      inner(c1_2, c2, 10)
+	      inner(c1, c2_2, 5)
 	    }
-	    
-	    "be comparable with itself" in new Counter1 with Replica {
-	      val c1_2 = c1.increment
+
+	    "be comparable" in new MultiReplicas {
+	      def inner[T](c1: GCounter[T], c2: GCounter[T]) {
+	        assert(c1.leq(c2).value == false)
+		      assert(c2.leq(c1).value == false)
+		      
+		      val c12 = c1.merge(c2).value
+		      
+		      assert(c12.leq(c2).value == false)
+		      assert(c12.leq(c1).value == false)
+		      
+		      assert(c1.leq(c12).value == true)
+		      assert(c2.leq(c12).value == true)
+		      
+		      val c21 = c2.merge(c1).value
+		      
+		      assert(c12.leq(c21).value == true)
+		      assert(c21.leq(c12).value == true)
+	      }
 	      
-	      assert(c1_2.leq(c1_2).isDefined)
-	      assert(c1_2.leq(c1).isDefined)
-	      assert(c1.leq(c1_2).isDefined)
-	    }
-	    
-	    "have the newer value after merge with itself" in new Counter1 with Replica {
-	      val c1_2 = c1.increment
+	      val c1 = counters(0)
+	      val c2 = counters(1)
 	      
-	      assert(c1_2.merge(c1).value.value == 1)
-	      assert(c1.merge(c1_2).value.value == 1)
-	      assert(c1_2.merge(c1_2).value.value == 1)
-	    }
-	    
-	    "be comparable with itself and preserve the semilattice ordering" in new Counter1 with Replica {
-	      val c1_2 = c1.increment
+	      inner(c1, c2)
+	      inner(c1.increment, c2)
+	      inner(c1, c2.increment)
+	      inner(c1.increment, c2.increment)
 	      
-	      assert(c1_2.leq(c1_2).value == true)
-	      assert(c1_2.leq(c1).value == false)
-	      assert(c1.leq(c1_2).value == true)
+	      assert(c1.leq(c1).value == true)
+	      assert(c1.leq(c1.increment).value == true)
+	      assert(c1.increment.leq(c1).value == false)
+	      assert(c1.increment.leq(c1.increment).value == true)
 	    }
 	  }
 	  
-	  "initialized with a number of replicas" should {
-	  	"be mergable" in new MultiReplicas {
-	  	  for (
-	  	    List(c1, c2) <- counters.combinations(2)
-	  	  ) {
-	  	    assert(c1.merge(c2).isDefined)
-	  	    assert(c2.merge(c1).isDefined)
-	  	  }
-	  	}
-	  	
-	  	"be comparable" in new MultiReplicas {
-	  	  for (
-	  	    List(c1, c2) <- counters.combinations(2)
-	  	  ) {
-	  	    assert(c1.leq(c2).value == false)
-	  	    assert(c2.leq(c1).value == false)
-	  	  }
-	  	  
-	  	  val c1 = counters(0)
-	  	  val c2 = counters(1)
-	  	  
-	  	  val c12 = c1.merge(c2).value
-	  	  
-	  	  assert(c1.leq(c12).value == true)
-	  	  assert(c2.leq(c12).value == true)
-	  	  
-	  	  assert(c12.leq(c1).value == false)
-	  	  assert(c12.leq(c2).value == false)
-	  	}
-	  	
-	  	"be mergable even with all replicas incremented" in new MultiReplicas {
-	  	  val incremented = counters.map(_.increment)
-	  	  
-  	    for (
-	  	    List(c1, c2) <- incremented.combinations(2)
-	  	  ) {
-	  	    assert(c1.merge(c2).isDefined)
-	  	    assert(c2.merge(c1).isDefined)
-	  	  }
-	  	}
-	  	
-	  	"be comparable even with all replicas incremented" in new MultiReplicas {
-	  	  val incremented = counters.map(_.increment)
-	  	  
-  	    for (
-	  	    List(c1, c2) <- incremented.combinations(2)
-	  	  ) {
-	  	    assert(c1.leq(c2).value == false)
-	  	    assert(c2.leq(c1).value == false)
-	  	  }
-	  	}
-	  	
-	  	"after merge contain a sum of the replicas' values" in new MultiReplicas {
-	  	  val c1 = (1 to 10).foldLeft(counters(0))((c, _) => c.increment)
-	  	  val c2 = (1 to 5).foldLeft(counters(1))((c, _) => c.increment)
-	  	  
-	  	  val m12 = c1.merge(c2)
-	  	  val m21 = c2.merge(c1)
-	  	  
-	  	  assert(m12.value.value == m21.value.value) //commutative
-	  	  assert(m12.value.value == 15)
-	  	}
-	  	
-	  	"after merge preserve the semilattice ordering" in new MultiReplicas {
-	  	  val c1 = (1 to 10).foldLeft(counters(0))((c, _) => c.increment)
-	  	  val c2 = (1 to 5).foldLeft(counters(1))((c, _) => c.increment)
-	  	  
-	  	  val om12 = c1.merge(c2)
-	  	  val om21 = c2.merge(c1)
-	  	  
-	  	  assert(c1.leq(c2).value == false)
-	  	  assert(c2.leq(c1).value == false)
-	  	  
-	  	  assert((for(x <- om12; y <- om21; z <- x.leq(y)) yield z).value == true)
-	  	  assert((for(x <- om21; y <- om12; z <- x.leq(y)) yield z).value == true)
-	  	  
-	  	  assert((for(x <- om12; z <- x.leq(c1)) yield z).value == false)
-	  	  assert((for(x <- om12; z <- x.leq(c2)) yield z).value == false)
-	  	  assert((for(x <- om21; z <- x.leq(c1)) yield z).value == false)
-	  	  assert((for(x <- om21; z <- x.leq(c2)) yield z).value == false)
-	  	  
-	  	  assert((for(x <- om12; z <- c1.leq(x)) yield z).value == true)
-	  	  assert((for(x <- om12; z <- c2.leq(x)) yield z).value == true)
-	  	  assert((for(x <- om21; z <- c1.leq(x)) yield z).value == true)
-	  	  assert((for(x <- om21; z <- c2.leq(x)) yield z).value == true)
-	  	  
-	  	  assert(c1.leq(c1.increment).value == true)
-	  	  assert(c1.increment().leq(c1).value == false)
-	  	  
-	  	  assert(c1.leq(om12.value.increment).value == true)
-	  	}
-	  }
-	}
-	
-	"Two different GCounters" should {
-	  "not be mergable" in new Counter1 with Counter2 with Replica {
-	    assert(c1.merge(c2) == None)
-	    assert(c2.merge(c1) == None)
-	  }
-	  
-	  "not be comparable" in new Counter1 with Counter2 with Replica {
-	    assert(c1.leq(c2) == None)
-	    assert(c2.leq(c1) == None)
+	  "for two different counters" should {
+	    "be not mergable" in new Counter1 with Counter2 with Replica {
+	      def inner[T](c1: GCounter[T], c2: GCounter[T]) {
+	        assert(c1.merge(c2).isEmpty)
+	        assert(c2.merge(c1).isEmpty)
+	      }
+	      
+	      inner(c1, c2)
+	      inner(c1.increment, c2)
+	      inner(c1, c2.increment)
+	    }
+	    
+	    "be not comparable" in new Counter1 with Counter2 with Replica {
+	      def inner[T](c1: GCounter[T], c2: GCounter[T]) {
+	        assert(c1.leq(c2).isEmpty)
+	        assert(c2.leq(c1).isEmpty)
+	      }
+	      
+	      inner(c1, c2)
+	      inner(c1.increment, c2)
+	      inner(c1, c2.increment)
+	    }
 	  }
 	}
 }

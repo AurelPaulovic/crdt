@@ -103,6 +103,10 @@ class PNCounterTest extends TestSpec {
 	      val c2_3 = (1 to 8).foldLeft(c2_2)((c, _) => c.decrement)
 	      
 	      inner(c1, c2, 0)
+	      inner(c2, c1, 0)
+	      inner(c1, c1, 0)
+	      inner(c1, c1_2, 10)
+	      inner(c1_2, c1, 10)
 	      inner(c1_2, c2_2, 15)
 	      inner(c1_2, c2, 10)
 	      inner(c1, c2_2, 5)
@@ -135,6 +139,11 @@ class PNCounterTest extends TestSpec {
 	      inner(c1.increment, c2)
 	      inner(c1, c2.increment)
 	      inner(c1.decrement, c2.increment)
+	      
+	      assert(c1.leq(c1).value == true)
+	      assert(c1.leq(c1.increment).value == true)
+	      assert(c1.increment.leq(c1).value == false)
+	      assert(c1.increment.leq(c1.increment).value == true)
 	    }
 	  }
 	  
