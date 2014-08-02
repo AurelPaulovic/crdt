@@ -70,9 +70,7 @@ object GCounter {
 	
   def apply[T](id: Id, replica: Replica, value: T)(implicit num: Numeric[T]): GCounter[T] = new GCounter[T](id, replica, value, immutable.Map[Replica, T]())
   
-  def apply[T](id: Id, replica: Replica, initState: GCounterState[T])(implicit num: Numeric[T]) = {
-    new GCounter(id, replica, initState.payload.getOrElse(replica, num.zero), initState.payload)
-  }
+  def apply[T](id: Id, replica: Replica, initState: GCounterState[T])(implicit num: Numeric[T]): GCounter[T] = new GCounter(id, replica, initState.payload.getOrElse(replica, num.zero), initState.payload)
   
   protected[GCounter] case class GCounterState[T: Numeric](protected[GCounter] val payload: immutable.Map[Replica, T])
 }
