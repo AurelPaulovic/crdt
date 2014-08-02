@@ -43,7 +43,10 @@ class GCounter[T] private (val id: Id, private[this] val replica: Replica, priva
   }
 
   def leq(other: GCounter.GCounterState[T]): Boolean = state.payload.forall {
-    case (k, v) => v <= other.payload.getOrElse(k, -num.one)
+    case (k, v) => other.payload.get(k) match {
+      case Some(v2) => v <= v2
+      case _ => false
+    }
   }
   
   def merge(other: GCounter[T]): Option[GCounter[T]] = other.id match {
@@ -55,7 +58,7 @@ class GCounter[T] private (val id: Id, private[this] val replica: Replica, priva
     val mergedPayload = payloadWithOutdatedLocal ++ (
         for {
 			    pair @ (k, v) <- other.payload
-			    if payloadWithOutdatedLocal.getOrElse(k, num.zero) < v
+			    if payloadWithOutdatedLocal.getOrElse(k, num.zero) <= v
 			  } yield pair
 	  )
 	  

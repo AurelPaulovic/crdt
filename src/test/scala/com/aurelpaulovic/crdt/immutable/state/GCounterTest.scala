@@ -126,9 +126,20 @@ class GCounterTest extends TestSpec {
 	  	  for (
 	  	    List(c1, c2) <- counters.combinations(2)
 	  	  ) {
-	  	    assert(c1.leq(c2).isDefined)
-	  	    assert(c2.leq(c1).isDefined)
+	  	    assert(c1.leq(c2).value == false)
+	  	    assert(c2.leq(c1).value == false)
 	  	  }
+	  	  
+	  	  val c1 = counters(0)
+	  	  val c2 = counters(1)
+	  	  
+	  	  val c12 = c1.merge(c2).value
+	  	  
+	  	  assert(c1.leq(c12).value == true)
+	  	  assert(c2.leq(c12).value == true)
+	  	  
+	  	  assert(c12.leq(c1).value == false)
+	  	  assert(c12.leq(c2).value == false)
 	  	}
 	  	
 	  	"be mergable even with all replicas incremented" in new MultiReplicas {
@@ -148,8 +159,8 @@ class GCounterTest extends TestSpec {
   	    for (
 	  	    List(c1, c2) <- incremented.combinations(2)
 	  	  ) {
-	  	    assert(c1.leq(c2).isDefined)
-	  	    assert(c2.leq(c1).isDefined)
+	  	    assert(c1.leq(c2).value == false)
+	  	    assert(c2.leq(c1).value == false)
 	  	  }
 	  	}
 	  	
