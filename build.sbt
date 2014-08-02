@@ -23,6 +23,8 @@ scalacOptions ++= Seq(
     "-explaintypes"
 )
 
+resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
+
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.4.0")
 
 libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.0" % "test"
