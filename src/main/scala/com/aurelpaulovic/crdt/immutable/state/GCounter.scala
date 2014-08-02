@@ -69,9 +69,9 @@ class GCounter[T] private (val id: Id, private[this] val replica: Replica, priva
 }
 
 object GCounter {
-	def apply[T](id: Id, replica: Replica)(implicit num: Numeric[T]): GCounter[T] = new GCounter[T](id, replica, num.zero, immutable.Map[Replica, T]())
+	def apply[T](id: Id, replica: Replica)(implicit num: Numeric[T]): GCounter[T] = new GCounter[T](id, replica, num.zero, immutable.Map.empty)
 	
-  def apply[T](id: Id, replica: Replica, value: T)(implicit num: Numeric[T]): GCounter[T] = new GCounter[T](id, replica, value, immutable.Map[Replica, T]())
+  def apply[T](id: Id, replica: Replica, value: T)(implicit num: Numeric[T]): GCounter[T] = new GCounter[T](id, replica, value, immutable.Map.empty)
   
   def apply[T](id: Id, replica: Replica, initState: GCounterState[T])(implicit num: Numeric[T]): GCounter[T] = new GCounter(id, replica, initState.payload.getOrElse(replica, num.zero), initState.payload)
   
