@@ -23,6 +23,8 @@ scalacOptions ++= Seq(
     "-explaintypes"
 )
 
+addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.4.0")
+
 libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.0" % "test"
 
 libraryDependencies += "junit" % "junit" % "4.8.1" % "test"
