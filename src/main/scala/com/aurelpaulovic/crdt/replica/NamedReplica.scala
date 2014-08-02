@@ -24,3 +24,7 @@ class NamedReplica(private val name: String) extends Replica {
   
   override def toString(): String = s"NamedReplica[$name]"
 }
+
+object NamedReplica {
+  implicit def stringToReplica(str: String): NamedReplica = new NamedReplica(str)
+}
