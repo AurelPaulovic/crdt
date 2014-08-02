@@ -48,6 +48,11 @@ class PNCounter[T] private (val id: Id, private[this] val replica: Replica, priv
 }
 
 object PNCounter {
+  def apply[T](id: Id, replica: Replica)(implicit num: Numeric[T]): PNCounter[T] = new PNCounter[T](id, replica, GCounter(id, replica), GCounter(id, replica, num.zero))
+	
+  def apply[T](id: Id, replica: Replica, value: T)(implicit num: Numeric[T]): PNCounter[T] = new PNCounter[T](id, replica, GCounter(id, replica, value), GCounter(id, replica, num.zero))
+  
+  def apply[T](id: Id, replica: Replica, initState: PNCounterState[T])(implicit num: Numeric[T]): PNCounter[T] = new PNCounter(id, replica, initState.pcount, initState.ncount)
   
   protected[PNCounter] case class PNCounterState[T: Numeric](protected[PNCounter] val pcount: GCounter[T], protected[PNCounter] val ncount: GCounter[T])
 }
