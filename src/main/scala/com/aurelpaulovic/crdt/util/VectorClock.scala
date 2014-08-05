@@ -25,45 +25,51 @@ class VectorClock private (private[this] val replica: Replica, private[this] val
   protected[VectorClock] lazy val state: immutable.Map[Replica, Int] = stateWithOutdatedLocal + (replica -> localValue)
   
   override def equals(other: Any): Boolean = other match {
-    case (that: VectorClock) => that.isInstanceOf[VectorClock] && state == that.state
+    case (that: VectorClock) => that.isInstanceOf[VectorClock] && state == that.state // depends on structural test, i.e. if all mappings in first map are present in second map and vice versa (no order)
     case _ => false
   }
   
   def tryCompareTo[B >: VectorClock <% PartiallyOrdered[B]](that: B): Option[Int] = that match {
     case (that: VectorClock) =>
-      if 			(this < that) 	Some(-1)
-      else if (this == that)	Some(0)
-      else 										Some(1)
+      if 			(this < that)	Some(-1)
+      else if (this > that)	Some(1)
+      else 									Some(0) // equal in the ordering, i.e. equal or concurrent
     case _ => None
   }
   
   def lteq(other: VectorClock): Boolean = this <= other
   
-  def <=(other: VectorClock): Boolean = this < other || this == other
+  def < (other: VectorClock): Boolean = this <= other && this != other
   
-	def <(other: VectorClock): Boolean = state.forall { case (rep, value) => other.state.get(rep) match {
-	  	case Some(otherValue) if value < otherValue => true
+	def <=  (other: VectorClock): Boolean = state.forall { case (rep, value) => other.state.get(rep) match {
+	  	case Some(otherValue) if value <= otherValue => true
 	  	case _ => false
 		}
 	}
+  
+  def > (other: VectorClock): Boolean = this >= other && this != other
 	
-	def >(other: VectorClock): Boolean = other.state.forall { case (rep, otherValue) => state.get(rep) match {
-	  	case Some(value) if value > otherValue => true
+	def >= (other: VectorClock): Boolean = other.state.forall { case (rep, otherValue) => state.get(rep) match {
+	  	case Some(value) if value >= otherValue => true
 	  	case _ => false
 		}
 	}
 	
 	def increment(): VectorClock = new VectorClock(replica, localValue + 1, stateWithOutdatedLocal)
 	
-	def +(other: VectorClock): VectorClock = { 
-	  val mergedState = stateWithOutdatedLocal ++ (
-        for {
-			    pair @ (k, v) <- other.state
-			    if stateWithOutdatedLocal.getOrElse(k, 0) <= v
-			  } yield pair
-	  )
-	  
-	  new VectorClock(replica, math.max(localValue, other.state.getOrElse(replica, 0)) + 1, mergedState)
+	def + (other: VectorClock): VectorClock = { 
+	  if 			(other > this) 	other
+	  else if (other <= this) this
+	  else {
+	  	val mergedState = stateWithOutdatedLocal ++ (
+				for {
+					pair @ (k, v) <- other.state
+					if stateWithOutdatedLocal.getOrElse(k, 0) <= v
+				} yield pair
+			)
+			
+			new VectorClock(replica, math.max(localValue, other.state.getOrElse(replica, 0)) + 1, mergedState)
+	  }
 	}
 	
 	override def toString(): String = s"VectorClock($state)"
