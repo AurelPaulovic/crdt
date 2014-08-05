@@ -9,8 +9,13 @@ This library tries to be self-contained and without any dependencies or assumpti
 
 ## Implemented CRDTs ##
 ### GCounter ###
+GCounter is an increment-only distributed counter.
 
 ### PNCounter ###
+PNCounter is a distributed counter that supports both increments and decrements.
+
+### MergeableRegister ###
+MergeableRegister is a simple register that uses vector clocks for partial ordering of replica updates and in case of concurrent replicas it merges the concurrent replicas into a single resulting value using a user-defined merge strategy (similar to scala.math.Ordered).
 
 
 ## Bibliography ##
