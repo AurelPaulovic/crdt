@@ -29,12 +29,11 @@ class VectorClock private (private[this] val replica: Replica, private[this] val
     case _ => false
   }
   
-  def tryCompareTo[B >: VectorClock <% PartiallyOrdered[B]](that: B): Option[Int] = that match {
-    case (that: VectorClock) =>
-      if 			(this < that)	Some(-1)
-      else if (this > that)	Some(1)
-      else 									Some(0) // equal in the ordering, i.e. equal or concurrent
-    case _ => None
+  def tryCompareTo[B >: VectorClock <% PartiallyOrdered[B]](that: B): Option[Int] = {
+      if 			(this == that) Some(0)  // equal
+      else if (this <= that) Some(-1) // less
+      else if (this >= that) Some(1)	// greated
+    	else 									 None			// concurrent
   }
   
   def lteq(other: VectorClock): Boolean = this <= other
