@@ -16,11 +16,13 @@
 
 package com.aurelpaulovic.crdt.replica
 
-class NamedReplica(private val name: String) extends Replica with Serializable {
+class NamedReplica (private val name: String) extends Replica with Ordered[NamedReplica] with Serializable {
   override def equals(other: Any): Boolean = other match {
     case (that: NamedReplica) => that.isInstanceOf[NamedReplica] && name == that.name
     case _ => false
   }
+  
+  def compare(other: NamedReplica): Int = name.compare(other.name)
   
   override def toString(): String = s"NamedReplica[$name]"
 }
