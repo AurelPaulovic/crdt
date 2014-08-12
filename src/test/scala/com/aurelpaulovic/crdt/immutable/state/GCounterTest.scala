@@ -79,6 +79,34 @@ class GCounterTest extends TestSpec {
 	  		counter1 = counter1.increment
 	      assert(counter1.value == 102)
 	    }
+	  	
+	  	"have correct value after merging and then incremented and then merged again with some stale replica" in {
+	  	  val c1 = GCounter[Int]("counter", new NamedReplica("rep1")).increment.increment //rep1 (2, 0)
+	  	  val c2 = GCounter[Int]("counter", new NamedReplica("rep2")).increment //rep2 (0, 1)
+	  	  
+	  	  val m21 = c2.merge(c1).value.increment //rep2 (2, 2)
+	  	  val c1_2 = c1.increment.increment //rep1 (4, 0)
+	  	   
+	  	  val c1_2_m21 = c1_2.merge(m21).value //rep1 (4, 2)
+	  	  val m21_c12 = m21.merge(c1_2).value //rep2 (4, 2)
+	  	  
+	  	  val c1_2_c1 = c1_2.merge(c1).value //rep1 (4, 0)
+	  	  val m21_c12_m21 = m21_c12.merge(m21).value.increment //rep2 (4, 3)
+	  	  
+	  	  val c1_2_m21_c12_m21 = c1_2.merge(m21_c12_m21).value //rep1 (4, 3)
+	  	  val c2i_c1_2_m21_c12_m21 = c2.increment.increment.increment.merge(c1_2_m21_c12_m21).value //rep2 (4, 4)
+	  	  
+	  	  assert(c1.value == 2)
+	  	  assert(c2.value == 1)
+	  	  assert(m21.value == 4)
+	  	  assert(c1_2.value == 4)
+	  	  assert(c1_2_m21.value == 6)
+	  	  assert(m21_c12.value == 6)
+	  	  assert(c1_2_c1.value == 4)
+	  	  assert(m21_c12_m21.value == 7)
+	  	  assert(c1_2_m21_c12_m21.value == 7)
+	  	  assert(c2i_c1_2_m21_c12_m21.value == 8)
+	  	}
 	  }
 	  
 	  "having two replicas" should {

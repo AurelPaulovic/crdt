@@ -34,6 +34,12 @@ class GCounter[T] private (val id: Id, private[this] val replica: Replica, priva
   lazy val state: GCounter.GCounterState[T] = new GCounter.GCounterState(payloadWithOutdatedLocal + (replica -> localValue))
 
   def increment(): GCounter[T] = new GCounter(id, replica, localValue + num.one, payloadWithOutdatedLocal)
+  
+  def incrementBy(by: T): GCounter[T] = {
+    if (by < num.zero) throw new IllegalArgumentException("value 'by' can not be negative")
+    else if (by == num.zero) this
+    else new GCounter(id, replica, localValue + by, payloadWithOutdatedLocal)
+  }
     
   lazy val value: T = state.payload.foldLeft(num.zero)(_ + _._2)
   
