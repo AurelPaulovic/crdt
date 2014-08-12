@@ -52,36 +52,75 @@ class PNCounterTest extends TestSpec {
 	  "initialized to 0" should {
 	    "have value 0" in new Counter1 with Replica {
 	      assert(c1.value == 0)
+	      assert(c1.isZero)
+	      assert(c1.isNegative == false)
 	    }
 	  }
 	  
 	  "initialized to 100" should {
 	    "have value 100" in new Replica {
-	      assert(PNCounter("c1", replica, 100).value == 100)
+	      val c = PNCounter("c1", replica, 100)
+	      assert(c.value == 100)
+	      assert(c.isZero == false)
+	      assert(c.isNegative == false)
 	    }
 	  }
 	  
-	  "when decremented or incremented" should {
-	    var counter = PNCounter[Int]("counter", new NamedReplica("rep")) 
-	    
+	  "when decremented and/or incremented" should {
 	    "have correct value" in {
+	      var counter = PNCounter[Int]("counter", new NamedReplica("rep"))
+	      
 	      counter = counter.increment
 	      assert(counter.value == 1)
+	      assert(counter.isZero == false)
+	      assert(counter.isNegative == false)
 	      
 	      counter = counter.increment
 	      assert(counter.value == 2)
+	      assert(counter.isZero == false)
+	      assert(counter.isNegative == false)
 	      
 	      counter = counter.decrement
 	      assert(counter.value == 1)
+	      assert(counter.isZero == false)
+	      assert(counter.isNegative == false)
 	      
 	      counter = counter.decrement
 	      assert(counter.value == 0)
+	      assert(counter.isZero)
+	      assert(counter.isNegative == false)
 	      
 	      counter = counter.decrement
 	      assert(counter.value == -1)
+	      assert(counter.isZero == false)
+	      assert(counter.isNegative)
 	      
 	      counter = counter.increment
 	      assert(counter.value == 0)
+	      assert(counter.isZero)
+	      assert(counter.isNegative == false)
+	    }
+	    
+	    "have value 0 after set to zero" in new Replica {
+	      val c = PNCounter("c1", replica, 100) 
+	      assert(c.setToZero.value == 0)
+	      
+	      val c2 = c.increment.increment.decrement.decrement
+	      assert(c2.setToZero.value == 0)
+	      
+	      val c3 = PNCounter[Int]("counter", replica).decrement.decrement
+	      assert(c3.setToZero.value == 0)
+	    }
+	    
+	    "have value 1 after set to one" in new Replica {
+	      val c = PNCounter("c1", replica, 100) 
+	      assert(c.setToOne.value == 1)
+	      
+	      val c2 = c.increment.increment.increment.decrement.decrement
+	      assert(c2.setToOne.value == 1)
+	      
+	      val c3 = PNCounter[Int]("counter", replica).decrement.decrement
+	      assert(c3.setToOne.value == 1)
 	    }
 	  }
 	  

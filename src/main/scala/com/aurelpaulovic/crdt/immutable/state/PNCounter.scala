@@ -24,11 +24,25 @@ class PNCounter[T] private (val id: Id, private[this] val replica: Replica, priv
   
   lazy val state: PNCounter.PNCounterState[T] = new PNCounter.PNCounterState(pcount, ncount)
   
+  def setToOne(): PNCounter[T] = setTo(num.one)
+  
+  def setToZero(): PNCounter[T] = setTo(num.zero)
+  
+  private def setTo(newVal: T): PNCounter[T] = {
+    if (newVal < value) new PNCounter(id, replica, pcount, ncount.incrementBy(value - newVal))
+    else if (newVal == value) this
+    else new PNCounter(id, replica, pcount.incrementBy(newVal - value) , ncount)
+  }
+  
   def increment(): PNCounter[T] = new PNCounter(id, replica, pcount.increment, ncount)
   
   def decrement(): PNCounter[T] = new PNCounter(id, replica, pcount, ncount.increment)
   
   def value(): T = pcount.value - ncount.value
+  
+  def isZero(): Boolean = ( value == num.zero )
+  
+  def isNegative(): Boolean = ( value < num.zero )
   
   def leq(other: PNCounter[T]): Option[Boolean] = other.id match {
     case `id` => Some(leq(other.state))
