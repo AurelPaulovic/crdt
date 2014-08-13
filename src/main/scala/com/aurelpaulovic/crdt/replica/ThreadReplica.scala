@@ -22,13 +22,19 @@ package com.aurelpaulovic.crdt.replica
   * The thread is identified using its id. That means, that if you reuse threads (e.g. use a thread pool) or 
   * the thread id is somehow recycled, you could mix up two replicas that were intended to be separate.
   */
-class ThreadReplica extends Replica with Ordered[ThreadReplica] {
+class ThreadReplica extends Replica with Ordered[ThreadReplica] with Equals {
   private val id = Thread.currentThread().getId()
   
   def compare(other: ThreadReplica): Int = id.compare(other.id)
     
   override def equals(other: Any): Boolean = other match {
-    case (that: ThreadReplica) => that.isInstanceOf[ThreadReplica] && this.id == that.id
+    case that: com.aurelpaulovic.crdt.replica.ThreadReplica => that.canEqual(ThreadReplica.this) && id == that.id
     case _ => false
   }
+
+  def canEqual(other: Any) = {
+    other.isInstanceOf[com.aurelpaulovic.crdt.replica.ThreadReplica]
+  }
+
+  override def hashCode() = 41 + id.hashCode
 }

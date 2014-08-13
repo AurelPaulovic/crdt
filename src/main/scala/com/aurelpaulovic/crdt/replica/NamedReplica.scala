@@ -16,17 +16,25 @@
 
 package com.aurelpaulovic.crdt.replica
 
-class NamedReplica (private val name: String) extends Replica with Ordered[NamedReplica] with Serializable {
-  override def equals(other: Any): Boolean = other match {
-    case (that: NamedReplica) => that.isInstanceOf[NamedReplica] && name == that.name
-    case _ => false
-  }
-  
+class NamedReplica (val name: String) extends Replica with Ordered[NamedReplica] with Serializable with Equals {
   def compare(other: NamedReplica): Int = name.compare(other.name)
   
-  override def toString(): String = s"NamedReplica[$name]"
+  override def toString = s"NamedReplica($name)"
+
+  def canEqual(other: Any) = {
+    other.isInstanceOf[com.aurelpaulovic.crdt.replica.NamedReplica]
+  }
+
+  override def equals(other: Any) = other match {
+    case that: com.aurelpaulovic.crdt.replica.NamedReplica => that.canEqual(NamedReplica.this) && name == that.name
+    case _ => false
+  }
+
+  override def hashCode() = 41 + name.hashCode
 }
 
 object NamedReplica {
   implicit def stringToReplica(str: String): NamedReplica = new NamedReplica(str)
+  
+  def apply(name: String): NamedReplica = new NamedReplica(name) 
 }
