@@ -32,6 +32,21 @@ The system clock time used in the clock is the real time as served by the operat
 
 The reason to use real time system clock is that it can help arbitrate between concurrent updates made on temporarily non-synchronized replicas. As an example consider two clients, one mobile and one web client. The mobile client is temporarily offline and knows only the latest value assigned to the register before it went offline. The web application has up to date data. If no update has been made after the mobile app went offline, both replicas (mobile and web) will have the same value and its associated clock. The user than performs an update of the register in his web application. Some time later, he decides that he will update the value from mobile app. Since the user knows, that the mobile is offline, he can probably understand why the value in the mobile app is stale. If he then updates it from the mobile and subsequently goes online with the mobile app, the register will end up with two concurrent replicas. If we used normal lamport clocks, these replicas would be concurrent and only partially ordered and we would have to perform an arbitrary decision which of the replicas will be kept as the newest. However, using system clock time which is reasonably in sync with real time we can have different values for the replica clocks and determine which of the replicas is really newer (limited by the accuracy of the system clocks). 
 
+### MPNSet ###
+MPNSet is a modified version of PNSet based on the modification by Molli, Weiss and Skaf but further augmented to account for the remove anomaly.
+
+MPNSet is a set of unique elements that can be added or removed. Whether the element is present in a set is determined by a PNCounter for that element where a positive value greater than 0 denotes that the element is present in the set, 0 or negative value means that the element is not in the set.
+
+When adding an element that is not in the set and its PNCounter is 0, the counter of the element is incremented to 1. All replicas will recieve an increment of the element's counter by 1. 
+
+When adding an element that is no in the set and its PNCounter is less than 0 = X, the counter will be incremented to 1 by a value Y (difference 1 - X where X is negative = Y) and all replicas will receive an increment of the element's counter by Y.
+
+When adding an element that is present in the set, the associated PNCounter stays the same.
+
+Remove of an element is symmetric to adding an element. When removing an element that is present in the set, the counter value is set to 0 and the difference between 0 and the original value of counter is sent as counter update to all replicas.
+
+The set should not suffer from any anomalies associated with PNSet or the version by Molli, Weiss and Skaf. When an element is added by a replica, it is guaranteed to be in the set (for that replica and version of set). When an element is removed by a replica, it is guaranteed to be not present in the set (for that replica and version of set).
+ 
 ## Bibliography ##
 * [Shapiro, M., et. al.: *A comprehensive study of convergent and commutative replicated data types.* Technical Report, 2011.](http://pagesperso-systeme.lip6.fr/Marc.Shapiro/papers/Comprehensive-CRDTs-RR7506-2011-01.pdf)
 
