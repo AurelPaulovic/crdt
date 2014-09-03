@@ -1,9 +1,10 @@
 [![Build Status](https://travis-ci.org/AurelPaulovic/crdt.svg?branch=develop)](https://travis-ci.org/AurelPaulovic/crdt)
+[![License](http://img.shields.io/badge/license-Apache%202.0-brightgreen.svg)](https://github.com/AurelPaulovic/crdt/blob/master/LICENSE)
 
 # CRDT #
 **WARNING** currently, this is work in progress and should not be used!
 
-This is a Scala library implementing Convergent and Commutative Replicated Data Types (CRDT).
+This is a Scala library implementing Convergent and Commutative Replicated Data Types (CRDT) [1].
 
 This library tries to be self-contained and without any dependencies or assumptions about communication/messaging middleware and can be used in distributed environment as well as for inter-process communication.
 
@@ -33,7 +34,7 @@ The system clock time used in the clock is the real time as served by the operat
 The reason to use real time system clock is that it can help arbitrate between concurrent updates made on temporarily non-synchronized replicas. As an example consider two clients, one mobile and one web client. The mobile client is temporarily offline and knows only the latest value assigned to the register before it went offline. The web application has up to date data. If no update has been made after the mobile app went offline, both replicas (mobile and web) will have the same value and its associated clock. The user than performs an update of the register in his web application. Some time later, he decides that he will update the value from mobile app. Since the user knows, that the mobile is offline, he can probably understand why the value in the mobile app is stale. If he then updates it from the mobile and subsequently goes online with the mobile app, the register will end up with two concurrent replicas. If we used normal lamport clocks, these replicas would be concurrent and only partially ordered and we would have to perform an arbitrary decision which of the replicas will be kept as the newest. However, using system clock time which is reasonably in sync with real time we can have different values for the replica clocks and determine which of the replicas is really newer (limited by the accuracy of the system clocks). 
 
 ### MPNSet ###
-MPNSet is a modified version of PNSet based on the modification by Molli, Weiss and Skaf but further augmented to account for the remove anomaly.
+MPNSet is a modified version of PNSet based on the modification by Molli, Weiss and Skaf but further augmented to account for the remove anomaly. An almost identical version has been later designed by Molli, Weiss and Skaf in C-Set [2].
 
 MPNSet is a set of unique elements that can be added or removed. Whether the element is present in a set is determined by a PNCounter for that element where a positive value greater than 0 denotes that the element is present in the set, 0 or negative value means that the element is not in the set.
 
@@ -53,5 +54,6 @@ Causaly Ordered Set is that uses a logical clock attached to the set to tag ever
 When two replicas of COSet are merged, then all elements that are present in both replicas will be kept in the merged replica as well but the tags of the elements will be merged with each other for each pair shared pair. Every element that is present in only one of the replicas and is concurrent with the other replica (tag of the element is concurrent with current logical clock of the other replica) will be in kept in the resulting merged set as well. Every element that is present in only one of the replicas but has its tag smaller than the current clock of the other replica (meaning that the other replica has already seen it but removed it afterwards) will be discarded.
  
 ## Bibliography ##
-* [Shapiro, M., et. al.: *A comprehensive study of convergent and commutative replicated data types.* Technical Report, 2011.](http://pagesperso-systeme.lip6.fr/Marc.Shapiro/papers/Comprehensive-CRDTs-RR7506-2011-01.pdf)
+1. [Shapiro, M., et. al.: *A comprehensive study of convergent and commutative replicated data types.* Technical Report, 2011.](http://pagesperso-systeme.lip6.fr/Marc.Shapiro/papers/Comprehensive-CRDTs-RR7506-2011-01.pdf)
+2. [Aslan, K., el. al.: *C-Set: a Commutative Replicated Data Type for Semantics Stores.* Red: Fourth International Workshop on RESource Discovery, 2011.](http://hal.inria.fr/docs/00/59/45/90/PDF/main.pdf)
 
