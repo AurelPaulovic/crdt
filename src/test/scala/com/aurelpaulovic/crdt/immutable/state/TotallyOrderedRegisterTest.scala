@@ -79,8 +79,8 @@ class TotallyOrderedRegisterTest extends TestSpec {
 	  
 	  "merged with another replica" should {
 	    "be equal to the other replica, if it was less than that replica" in {
+	    	val mr1 = TotallyOrderedRegister("mr1", rep1, "a")
 	    	val mr2 = TotallyOrderedRegister("mr1", rep2, "b")
-	      val mr1 = TotallyOrderedRegister("mr1", rep1, "a")
 	      
 	      // TotalTimeOrder used in TotallyOrderedRegister uses Replica ordering check if the time is same, so unless we wait for real time clock tick, rep2 will be always greater than rep1
 	      
