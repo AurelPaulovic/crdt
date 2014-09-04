@@ -2,7 +2,6 @@ package com.aurelpaulovic.crdt.immutable.state.components
 
 import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.immutable.state.JoinSemilattice
-import scala.collection.immutable
 
 sealed trait GCounter[T] extends JoinSemilattice[GCounter[T]] {
   protected implicit val num: Numeric[T]

@@ -81,6 +81,6 @@ object MPNSet {
       ele <- elements
     } yield (ele, PNCounter(id, replica, 1))
     
-    new MPNSet[T](id, replica,  GCounter[Long](id, replica), elementPairs.toMap)
+    new MPNSet[T](id, replica,  GCounter[Long](id, replica).increment(elementPairs.size.toLong), elementPairs.toMap)
   }
 }

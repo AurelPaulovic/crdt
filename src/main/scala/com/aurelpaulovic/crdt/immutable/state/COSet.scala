@@ -72,6 +72,6 @@ object COSet {
       ele <- elements
     } yield (ele, GCounter[Long](id, replica, 1))
     
-    new COSet[T](id, replica,  GCounter[Long](id, replica), elementPairs.toMap)
+    new COSet[T](id, replica,  GCounter[Long](id, replica).increment(elementPairs.size.toLong), elementPairs.toMap)
   }
 }

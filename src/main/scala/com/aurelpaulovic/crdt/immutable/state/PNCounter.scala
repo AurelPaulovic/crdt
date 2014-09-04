@@ -49,14 +49,14 @@ class PNCounter[T] private (val id: Id, private[this] val replica: Replica, priv
     case _ => None
   }
   
-  def leq(other: PNCounter.PNCounterState[T]): Boolean = pcount.leq(other.pcount.state) && ncount.leq(other.ncount.state)
+  def leq(other: PNCounter.PNCounterState[T]): Boolean = pcount.leq(other.pcount).get && ncount.leq(other.ncount).get
   
   def merge(other: PNCounter[T]): Option[PNCounter[T]] = other.id match {
     case `id` => Some(merge(other.state))
     case _ => None
   }
   
-  def merge(other: PNCounter.PNCounterState[T]): PNCounter[T] = new PNCounter(id, replica, pcount.merge(other.pcount.state), ncount.merge(other.ncount.state))
+  def merge(other: PNCounter.PNCounterState[T]): PNCounter[T] = new PNCounter(id, replica, pcount.merge(other.pcount).get, ncount.merge(other.ncount).get)
   
   override def toString(): String = s"PNCounter($id, $replica) with value $value"
 }

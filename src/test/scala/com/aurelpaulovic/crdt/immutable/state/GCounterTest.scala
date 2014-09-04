@@ -49,8 +49,12 @@ class GCounterTest extends TestSpec {
 	
 	"A GCounter" when {
 	  "initialized to zero" should {
-	    "have value 0" in new Counter1 with Replica{
+	    "have value 0" in new Counter1 with Replica {
 	      assert(c1.value == 0)
+	    }
+	    
+	    "be comparable with itself" in new Counter1 with Replica {
+	      assert((c1 leq c1).value)
 	    }
 	  }
 	  
@@ -59,6 +63,10 @@ class GCounterTest extends TestSpec {
 	    
 	    "have value 100" in {
 	      assert(counter.value == 100)
+	    }
+	    
+	    "be comparable with itself" in {
+	      assert((counter leq counter).value)
 	    }
 	  }
 	  
@@ -133,27 +141,27 @@ class GCounterTest extends TestSpec {
 	      inner(c1, c2_2, 5)
 	    }
 
-	    "be comparable" in new MultiReplicas {
+	    "be comparable when non-empty" in new MultiReplicas {
 	      def inner[T](c1: GCounter[T], c2: GCounter[T]) {
-	        assert(c1.leq(c2).value == false)
-		      assert(c2.leq(c1).value == false)
+	        assert(c1.leq(c2).value == false, s"c1: $c1 c2: $c2")
+		      assert(c2.leq(c1).value == false, s"c2: $c2 c1: $c1")
 		      
 		      val c12 = c1.merge(c2).value
 		      
-		      assert(c12.leq(c2).value == false)
-		      assert(c12.leq(c1).value == false)
+		      assert(c12.leq(c2).value == false, s"c12: $c12 c2: $c2")
+		      assert(c12.leq(c1).value == false, s"c12: $c12 c1: $c1")
 		      
-		      assert(c1.leq(c12).value == true)
-		      assert(c2.leq(c12).value == true)
+		      assert(c1.leq(c12).value == true, s"c1: $c1 c12: $c12")
+		      assert(c2.leq(c12).value == true, s"c2: $c2 c12: $c12")
 		      
 		      val c21 = c2.merge(c1).value
 		      
-		      assert(c12.leq(c21).value == true)
-		      assert(c21.leq(c12).value == true)
+		      assert(c12.leq(c21).value == true, s"c12: $c12 c21: $c21")
+		      assert(c21.leq(c12).value == true, s"c21: $c21 c12: $c12")
 	      }
 	      
-	      val c1 = counters(0)
-	      val c2 = counters(1)
+	      val c1 = counters(0).increment
+	      val c2 = counters(1).increment
 	      
 	      inner(c1, c2)
 	      inner(c1.increment, c2)
@@ -164,6 +172,18 @@ class GCounterTest extends TestSpec {
 	      assert(c1.leq(c1.increment).value == true)
 	      assert(c1.increment.leq(c1).value == false)
 	      assert(c1.increment.leq(c1.increment).value == true)
+	    }
+	    
+	    "be comparable when at least one of them is empty" in new MultiReplicas {
+	      val c1 = counters(0)
+	      val c2 = counters(1)
+	      
+	      assert((c1 leq c2).value && (c2 leq c1).value)
+	      
+	      val c22 = c2.increment
+	      
+	      assert((c1 leq c22).value)
+	      assert((c22 leq c1).value == false)
 	    }
 	  }
 	  
