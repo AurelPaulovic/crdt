@@ -61,7 +61,7 @@ class COSet [T] private (val id: Id, val replica: Replica, private val clock: GC
 	
 	def leq(other: COSet[T]): Option[Boolean] = clock leq other.clock
 	
-	override def toString(): String = s"COSet($id, $replica) with elements ${elements.keys}" 
+	override def toString(): String = s"COSet($id, $replica, $clock) with elements ${elements.keys}" 
 }
 
 object COSet {

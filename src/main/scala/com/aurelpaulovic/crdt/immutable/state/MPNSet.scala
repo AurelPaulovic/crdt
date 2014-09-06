@@ -71,6 +71,8 @@ class MPNSet[T] private (val id: Id, private[this] val replica: Replica, private
 	    Some((clock leq other.clock).get)
 	  case _ => None
 	}
+	
+	override def toString(): String = s"MPNSet($id, $replica, $clock, $elements)"
 }
 
 object MPNSet {
