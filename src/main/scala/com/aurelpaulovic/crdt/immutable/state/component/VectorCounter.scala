@@ -19,7 +19,7 @@ package com.aurelpaulovic.crdt.immutable.state.component
 import scala.collection.immutable
 import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.replica.NamedReplica
-import com.aurelpaulovic.crdt.immutable.state.Lattice
+import com.aurelpaulovic.crdt.immutable.state.lattice.Lattice
 
 sealed trait VectorCounter[T] extends Lattice[VectorCounter[T]] {
   protected implicit val num: Numeric[T]

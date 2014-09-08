@@ -1,4 +1,4 @@
-package com.aurelpaulovic.crdt.immutable.state
+package com.aurelpaulovic.crdt.immutable.state.lattice
 
 trait LatticeOrderOps[T <: LatticeOrderOps[T]] { this: T =>
   def compareTo(that: T): Option[Int] = {

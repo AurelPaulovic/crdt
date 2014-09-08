@@ -1,7 +1,7 @@
 package com.aurelpaulovic.crdt.immutable.state.component
 
 import com.aurelpaulovic.crdt.replica.Replica
-import com.aurelpaulovic.crdt.immutable.state.JoinSemilattice
+import com.aurelpaulovic.crdt.immutable.state.lattice.JoinSemilattice
 
 sealed trait PNCounter[T] extends JoinSemilattice[PNCounter[T]] {
   protected implicit val num: Numeric[T]

@@ -1,4 +1,4 @@
-package com.aurelpaulovic.crdt.immutable.state
+package com.aurelpaulovic.crdt.immutable.state.lattice
 
 trait MeetSemilattice[T <: MeetSemilattice[T]] extends LatticeOrderOps[T] { this: T =>
   def meet(other: T): T
