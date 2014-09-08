@@ -1,4 +1,4 @@
-package com.aurelpaulovic.crdt.immutable.state.components
+package com.aurelpaulovic.crdt.immutable.state.component
 
 import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.immutable.state.JoinSemilattice
@@ -21,7 +21,7 @@ sealed trait PNCounter[T] extends JoinSemilattice[PNCounter[T]] {
 
   def decrement(): PNCounter[T] = decrement(num.one)
 
-  protected[components] def payload: PNCounter.Payload[T]
+  protected[component] def payload: PNCounter.Payload[T]
 }
 
 object PNCounter {
@@ -29,7 +29,7 @@ object PNCounter {
 
   def apply[T](replica: Replica, value: T)(implicit num: Numeric[T]): PNCounter[T] = NonEmptyPNCounter(replica, value, num.zero, Payload.empty[T])
 
-  protected[components] case class Payload[T](p: VectorCounter[T], n: VectorCounter[T]) extends JoinSemilattice[Payload[T]] {
+  protected[component] case class Payload[T](p: VectorCounter[T], n: VectorCounter[T]) extends JoinSemilattice[Payload[T]] {
     def dominates(other: Payload[T]): Boolean = (p dominates other.p) && (n dominates other.n)
 
     def isDominatedBy(other: Payload[T]): Boolean = (p isDominatedBy other.p) && (n isDominatedBy other.n)
@@ -39,7 +39,7 @@ object PNCounter {
     def join(other: Payload[T]): Payload[T] = Payload(p join other.p, n join other.n)
   }
 
-  protected[components] object Payload {
+  protected[component] object Payload {
     def empty[T: Numeric](): Payload[T] = Payload[T](VectorCounter.empty[T], VectorCounter.empty[T])
   }
 }
@@ -51,7 +51,7 @@ final case class EmptyPNCounter[T](val replica: Replica)(implicit protected val 
 
   def decrement(by: T): PNCounter[T] = NonEmptyPNCounter(replica, num.zero, by, PNCounter.Payload.empty[T])
 
-  protected[components] lazy val payload: PNCounter.Payload[T] = PNCounter.Payload.empty[T]
+  protected[component] lazy val payload: PNCounter.Payload[T] = PNCounter.Payload.empty[T]
 
   val isEmpty: Boolean = true
 
@@ -82,7 +82,7 @@ case class NonEmptyPNCounter[T](val replica: Replica,
 
   def decrement(by: T): PNCounter[T] = new NonEmptyPNCounter(replica, localP, localN + by, outdatedPayload)
 
-  protected[components] lazy val payload: PNCounter.Payload[T] = {
+  protected[component] lazy val payload: PNCounter.Payload[T] = {
     if (localP == num.zero && localN == num.zero) outdatedPayload
     else PNCounter.Payload(outdatedPayload.p.increment(replica, localP), outdatedPayload.n.increment(replica, localN))
   }

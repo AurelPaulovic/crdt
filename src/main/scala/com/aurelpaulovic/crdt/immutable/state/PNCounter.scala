@@ -19,10 +19,10 @@ package com.aurelpaulovic.crdt.immutable.state
 import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.Id
 
-class PNCounter[T] private (val id: Id, val replica: Replica, private val counter: components.PNCounter[T])(implicit num: Numeric[T]) extends CRDT[T, PNCounter[T]] {
+class PNCounter[T] private (val id: Id, val replica: Replica, private val counter: component.PNCounter[T])(implicit num: Numeric[T]) extends CRDT[T, PNCounter[T]] {
   import num._
 
-  def this(id: Id, replica: Replica)(implicit num: Numeric[T]) = this(id, replica, components.PNCounter[T](replica))
+  def this(id: Id, replica: Replica)(implicit num: Numeric[T]) = this(id, replica, component.PNCounter[T](replica))
 
   def setToOne(): PNCounter[T] = setTo(num.one)
 

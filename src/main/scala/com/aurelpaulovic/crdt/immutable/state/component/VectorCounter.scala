@@ -14,7 +14,7 @@
  * limitations under the License. 
  */
 
-package com.aurelpaulovic.crdt.immutable.state.components
+package com.aurelpaulovic.crdt.immutable.state.component
 
 import scala.collection.immutable
 import com.aurelpaulovic.crdt.replica.Replica

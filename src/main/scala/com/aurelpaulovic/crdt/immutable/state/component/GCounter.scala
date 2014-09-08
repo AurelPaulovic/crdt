@@ -1,4 +1,4 @@
-package com.aurelpaulovic.crdt.immutable.state.components
+package com.aurelpaulovic.crdt.immutable.state.component
 
 import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.immutable.state.JoinSemilattice
@@ -17,7 +17,7 @@ sealed trait GCounter[T] extends JoinSemilattice[GCounter[T]] {
 
   def increment(): GCounter[T] = increment(num.one)
 
-  protected[components] def payload: VectorCounter[T]
+  protected[component] def payload: VectorCounter[T]
 }
 
 object GCounter {
@@ -31,7 +31,7 @@ final case class EmptyGCounter[T](val replica: Replica)(implicit protected val n
 
   def increment(by: T): GCounter[T] = NonEmptyGCounter(replica, by, VectorCounter.empty)
 
-  protected[components] lazy val payload: VectorCounter[T] = VectorCounter.empty[T]
+  protected[component] lazy val payload: VectorCounter[T] = VectorCounter.empty[T]
 
   val isEmpty: Boolean = true
 
@@ -52,7 +52,7 @@ case class NonEmptyGCounter[T](val replica: Replica,
                                val outdatedPayload: VectorCounter[T])(implicit protected val num: Numeric[T]) extends GCounter[T] {
   import num._
 
-  protected[components] lazy val payload: VectorCounter[T] = {
+  protected[component] lazy val payload: VectorCounter[T] = {
     if (localValue == num.zero) outdatedPayload
     else outdatedPayload.increment(replica, localValue)
   }

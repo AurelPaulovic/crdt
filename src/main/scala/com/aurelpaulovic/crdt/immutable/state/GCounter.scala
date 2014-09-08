@@ -20,8 +20,8 @@ import com.aurelpaulovic.crdt.replica.Replica
 import scala.collection.immutable
 import com.aurelpaulovic.crdt.Id
 
-class GCounter[T] private (val id: Id, val replica: Replica, private val counter: components.GCounter[T])(implicit num: Numeric[T]) extends CRDT[T, GCounter[T]] {
-  def this(id: Id, replica: Replica)(implicit num: Numeric[T]) = this(id, replica, components.GCounter(replica))
+class GCounter[T] private (val id: Id, val replica: Replica, private val counter: component.GCounter[T])(implicit num: Numeric[T]) extends CRDT[T, GCounter[T]] {
+  def this(id: Id, replica: Replica)(implicit num: Numeric[T]) = this(id, replica, component.GCounter(replica))
 
   lazy val value: T = counter.value
 

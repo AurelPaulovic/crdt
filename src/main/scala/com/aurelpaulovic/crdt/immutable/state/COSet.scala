@@ -20,7 +20,7 @@ import com.aurelpaulovic.crdt.Id
 import com.aurelpaulovic.crdt.replica.Replica
 import scala.collection.immutable
 
-class COSet [T] private (val id: Id, val replica: Replica, private val clock: components.GCounter[Long], private val elements: Map[T, components.GCounter[Long]]) {
+class COSet [T] private (val id: Id, val replica: Replica, private val clock: component.GCounter[Long], private val elements: Map[T, component.GCounter[Long]]) {
 	def add(ele: T): COSet[T] = {
 	  if (elements.contains(ele)) this
 	  else new COSet[T](id, replica, clock.increment, elements + (ele -> clock.increment))
@@ -69,13 +69,13 @@ class COSet [T] private (val id: Id, val replica: Replica, private val clock: co
 }
 
 object COSet {
-  def apply[T](id: Id, replica: Replica): COSet[T] = new COSet[T](id, replica, components.GCounter[Long](replica), immutable.Map.empty)
+  def apply[T](id: Id, replica: Replica): COSet[T] = new COSet[T](id, replica, component.GCounter[Long](replica), immutable.Map.empty)
   
   def apply[T](id: Id, replica: Replica, elements: T*): COSet[T] = {
     val elementPairs = for {
       ele <- elements
-    } yield (ele, components.GCounter[Long](replica, 1))
+    } yield (ele, component.GCounter[Long](replica, 1))
     
-    new COSet[T](id, replica,  components.GCounter[Long](replica).increment(elementPairs.size.toLong), elementPairs.toMap)
+    new COSet[T](id, replica,  component.GCounter[Long](replica).increment(elementPairs.size.toLong), elementPairs.toMap)
   }
 }
