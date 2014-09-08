@@ -19,54 +19,50 @@ package com.aurelpaulovic.crdt.immutable.state
 import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.Id
 
-class PNCounter[T] private (val id: Id, private[this] val replica: Replica, private[this] val pcount: GCounter[T], private[this] val ncount: GCounter[T])(implicit num: Numeric[T]) {
-  import num._ 
-  
-  lazy val state: PNCounter.PNCounterState[T] = new PNCounter.PNCounterState(pcount, ncount)
-  
+class PNCounter[T] private (val id: Id, val replica: Replica, private val counter: components.PNCounter[T])(implicit num: Numeric[T]) extends CRDT[T, PNCounter[T]] {
+  import num._
+
+  def this(id: Id, replica: Replica)(implicit num: Numeric[T]) = this(id, replica, components.PNCounter[T](replica))
+
   def setToOne(): PNCounter[T] = setTo(num.one)
-  
+
   def setToZero(): PNCounter[T] = setTo(num.zero)
-  
-  private def setTo(newVal: T): PNCounter[T] = {
-    if (newVal < value) new PNCounter(id, replica, pcount, ncount.incrementBy(value - newVal))
-    else if (newVal == value) this
-    else new PNCounter(id, replica, pcount.incrementBy(newVal - value) , ncount)
+
+  private def setTo(newValue: T): PNCounter[T] = {
+    if (newValue < value) new PNCounter[T](id, replica, counter.decrement(value - newValue))
+    else if (newValue == value) this
+    else new PNCounter[T](id, replica, counter.increment(newValue - value))
   }
-  
-  def increment(): PNCounter[T] = new PNCounter(id, replica, pcount.increment, ncount)
-  
-  def decrement(): PNCounter[T] = new PNCounter(id, replica, pcount, ncount.increment)
-  
-  def value(): T = pcount.value - ncount.value
-  
-  def isZero(): Boolean = ( value == num.zero )
-  
-  def isNegative(): Boolean = ( value < num.zero )
-  
-  def leq(other: PNCounter[T]): Option[Boolean] = other.id match {
-    case `id` => Some(leq(other.state))
-    case _ => None
+
+  lazy val value: T = counter.value
+
+  def increment(): PNCounter[T] = increment(num.one)
+
+  def decrement(): PNCounter[T] = decrement(num.one)
+
+  def increment(by: T): PNCounter[T] = new PNCounter[T](id, replica, counter.increment(by))
+
+  def decrement(by: T): PNCounter[T] = new PNCounter[T](id, replica, counter.decrement(by))
+
+  def isZero(): Boolean = (value == num.zero)
+
+  def isNegative(): Boolean = (value < num.zero)
+
+  def leq(other: PNCounter[T]): Option[Boolean] = {
+    if (other.id == id) Some(counter /<=\ other.counter)
+    else None
   }
-  
-  def leq(other: PNCounter.PNCounterState[T]): Boolean = pcount.leq(other.pcount).get && ncount.leq(other.ncount).get
-  
-  def merge(other: PNCounter[T]): Option[PNCounter[T]] = other.id match {
-    case `id` => Some(merge(other.state))
-    case _ => None
+
+  def merge(other: PNCounter[T]): Option[PNCounter[T]] = {
+    if (other.id == id) Some(new PNCounter[T](id, replica, counter /+\ other.counter))
+    else None
   }
-  
-  def merge(other: PNCounter.PNCounterState[T]): PNCounter[T] = new PNCounter(id, replica, pcount.merge(other.pcount).get, ncount.merge(other.ncount).get)
-  
-  override def toString(): String = s"PNCounter($id, $replica) with value $value"
+
+  override def toString(): String = s"PNCounter($id, $replica, $counter) with value $value"
 }
 
 object PNCounter {
-  def apply[T](id: Id, replica: Replica)(implicit num: Numeric[T]): PNCounter[T] = new PNCounter[T](id, replica, GCounter(id, replica), GCounter(id, replica, num.zero))
-	
-  def apply[T](id: Id, replica: Replica, value: T)(implicit num: Numeric[T]): PNCounter[T] = new PNCounter[T](id, replica, GCounter(id, replica, value), GCounter(id, replica, num.zero))
-  
-  def apply[T](id: Id, replica: Replica, initState: PNCounterState[T])(implicit num: Numeric[T]): PNCounter[T] = new PNCounter(id, replica, initState.pcount, initState.ncount)
-  
-  protected[PNCounter] case class PNCounterState[T: Numeric](protected[PNCounter] val pcount: GCounter[T], protected[PNCounter] val ncount: GCounter[T])
+  def apply[T](id: Id, replica: Replica)(implicit num: Numeric[T]): PNCounter[T] = new PNCounter[T](id, replica)
+
+  def apply[T](id: Id, replica: Replica, value: T)(implicit num: Numeric[T]): PNCounter[T] = new PNCounter[T](id, replica).increment(value)
 }
