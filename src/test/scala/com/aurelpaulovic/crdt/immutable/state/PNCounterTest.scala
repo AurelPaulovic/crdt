@@ -171,8 +171,8 @@ class PNCounterTest extends TestSpec {
 		      assert(c21.leq(c12).value == true)
 	      }
 	      
-	      val c1 = counters(0)
-	      val c2 = counters(1)
+	      val c1 = counters(0).increment.increment
+	      val c2 = counters(1).increment.increment
 	      
 	      inner(c1, c2)
 	      inner(c1.increment, c2)

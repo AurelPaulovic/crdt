@@ -89,12 +89,12 @@ class COSetTest extends TestSpec {
 	      assertResult(0)(newSet.size)
 	    } 
 	    
-	    "be concurrent with another replica" in {
+	    "be the same as another empty replica" in {
 	      val set1 = COSet[String]("set", new NamedReplica("rep1"))
 	      val set2 = COSet[String]("set", new NamedReplica("rep2"))
 	      
-	      assert((set1 leq set2).value == false)
-	      assert((set2 leq set1).value == false)
+	      assert((set1 leq set2).value)
+	      assert((set2 leq set1).value)
 	    }
 	  }
 	  
@@ -215,7 +215,10 @@ class COSetTest extends TestSpec {
 	      set3 = (set3 merge set1).get // set3[1,0,0]{x} x[1,0,0]
 	      
 	      assert(set3 contains 'x)
-	      assert((set3 leq set1).value == false && (set1 leq set3).value && (set2 leq set3).value == false && (set3 leq set2).value == false)
+	      assert((set3 leq set1).value)
+	      assert((set1 leq set3).value)
+	      assert((set2 leq set3).value == false)
+	      assert((set3 leq set2).value)
 	      
 	      set3 = set3 add 'z // set3[1,0,1]{x,z} x[1,0,0] z[1,0,1]
 	      set3 = set3 remove 'x // set3[1,0,2]{z} z[1,0,1]

@@ -21,7 +21,7 @@ import scala.collection.immutable
 import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.Id
 
-class MPNSet[T] private (val id: Id, private[this] val replica: Replica, private val clock: GCounter[Long], private val elements: immutable.Map[T, PNCounter[Int]]) {
+class MPNSet[T] private (val id: Id, private[this] val replica: Replica, private val clock: component.GCounter[Long], private val elements: immutable.Map[T, PNCounter[Int]]) {
 	def add(ele: T): MPNSet[T] = elements.get(ele) match {
 	  case None => new MPNSet(id, replica, clock.increment, elements + newElement(ele))
 	  case Some(counter) if elementExists(counter) => this
@@ -62,25 +62,27 @@ class MPNSet[T] private (val id: Id, private[this] val replica: Replica, private
 	    		  }
 	    		}
 	    )
-	    Some(new MPNSet(id, replica, (clock.merge(other.clock)).get, mergedElements))
+	    Some(new MPNSet(id, replica, clock /+\ other.clock, mergedElements))
 	  case _ => None
 	}
 
 	def leq(other: MPNSet[T]): Option[Boolean] = other.id match {
 	  case `id` =>
-	    Some((clock leq other.clock).get)
+	    Some(clock isDominatedBy other.clock)
 	  case _ => None
 	}
+	
+	override def toString(): String = s"MPNSet($id, $replica, $clock, $elements)"
 }
 
 object MPNSet {
-  def apply[T](id: Id, replica: Replica): MPNSet[T] = new MPNSet[T](id, replica, GCounter[Long](id, replica), immutable.Map.empty)
+  def apply[T](id: Id, replica: Replica): MPNSet[T] = new MPNSet[T](id, replica, component.GCounter[Long](replica), immutable.Map.empty)
   
   def apply[T](id: Id, replica: Replica, elements: T*) = {
     val elementPairs = for {
       ele <- elements
     } yield (ele, PNCounter(id, replica, 1))
     
-    new MPNSet[T](id, replica,  GCounter[Long](id, replica), elementPairs.toMap)
+    new MPNSet[T](id, replica,  component.GCounter[Long](replica).increment(elementPairs.size.toLong), elementPairs.toMap)
   }
 }

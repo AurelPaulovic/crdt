@@ -20,7 +20,7 @@ import com.aurelpaulovic.crdt.Id
 import com.aurelpaulovic.crdt.replica.Replica
 import scala.collection.immutable
 
-class COSet [T] private (val id: Id, val replica: Replica, private val clock: GCounter[Long], private val elements: Map[T, GCounter[Long]]) {
+class COSet [T] private (val id: Id, val replica: Replica, private val clock: component.GCounter[Long], private val elements: Map[T, component.GCounter[Long]]) {
 	def add(ele: T): COSet[T] = {
 	  if (elements.contains(ele)) this
 	  else new COSet[T](id, replica, clock.increment, elements + (ele -> clock.increment))
@@ -39,39 +39,43 @@ class COSet [T] private (val id: Id, val replica: Replica, private val clock: GC
 	
 	def size(): Int = sizeCache
 	
-	def merge(other: COSet[T]): Option[COSet[T]] = (clock leq other.clock, other.clock leq clock) match {
-	  case (Some(true), Some(true)) => Some(this) // this == other
-	  case (Some(true), Some(false)) => Some(new COSet[T](id, replica, (clock merge other.clock).get, other.elements)) // this < other
-	  case (Some(false), Some(true)) => Some(this) // this > other
-	  case (Some(false), Some(false)) =>
-	    //1. take elements present in both sets and merge their tags
-	    val sharedElements = elements.collect{ case (ele, tag) if other.elements.contains(ele) => (ele -> (tag merge other.elements(ele)).get) }
-	    
-	    //2. take elements that present only in this and are concurrent with current clock in other
-	    val newThisElements = (elements -- other.elements.keys).filter{ case (_, tag) => concurrentClocks(tag, other.clock) }
-	    
-	    //3. take elements that present only in other and are concurrent with current clock in this
-	    val newOtherElements = (other.elements -- elements.keys).filter{ case (_, tag) => concurrentClocks(tag, clock) }
-	     
-	    Some(new COSet[T](id, replica, (clock merge other.clock).get, sharedElements ++ newThisElements ++ newOtherElements))// concurrent
-	  case (_, _) => None
+	def merge(other: COSet[T]): Option[COSet[T]] = { 
+	  if (id == other.id) {
+		  (clock /<=\ other.clock, other.clock /<=\ clock) match {
+			  case (true, true) => Some(this) // this == other
+			  case (true, false) => Some(new COSet[T](id, replica, clock /+\ other.clock, other.elements)) // this < other
+			  case (false, true) => Some(this) // this > other
+			  case (false, false) =>
+			    //1. take elements present in both sets and merge their tags
+			    val sharedElements = elements.collect{ case (ele, tag) if other.elements.contains(ele) => (ele -> tag /+\ other.elements(ele)) }
+			    
+			    //2. take elements that present only in this and are concurrent with current clock in other
+			    val newThisElements = (elements -- other.elements.keys).filter{ case (_, tag) => tag /~\ other.clock }
+			    
+			    //3. take elements that present only in other and are concurrent with current clock in this
+			    val newOtherElements = (other.elements -- elements.keys).filter{ case (_, tag) => tag /~\ clock }
+			     
+			    Some(new COSet[T](id, replica, clock /+\ other.clock, sharedElements ++ newThisElements ++ newOtherElements))// concurrent
+			}
+		} else None
 	}
 	
-	private def concurrentClocks(c1: GCounter[Long], c2: GCounter[Long]): Boolean = !((c1 leq c2).get || (c2 leq c1).get)
+	def leq(other: COSet[T]): Option[Boolean] = {
+	  if (id == other.id) Some(clock isDominatedBy other.clock)
+	  else None
+	}
 	
-	def leq(other: COSet[T]): Option[Boolean] = clock leq other.clock
-	
-	override def toString(): String = s"COSet($id, $replica) with elements ${elements.keys}" 
+	override def toString(): String = s"COSet($id, $replica, $clock) with elements ${elements.keys}" 
 }
 
 object COSet {
-  def apply[T](id: Id, replica: Replica): COSet[T] = new COSet[T](id, replica, GCounter[Long](id, replica), immutable.Map.empty)
+  def apply[T](id: Id, replica: Replica): COSet[T] = new COSet[T](id, replica, component.GCounter[Long](replica), immutable.Map.empty)
   
   def apply[T](id: Id, replica: Replica, elements: T*): COSet[T] = {
     val elementPairs = for {
       ele <- elements
-    } yield (ele, GCounter[Long](id, replica, 1))
+    } yield (ele, component.GCounter[Long](replica, 1))
     
-    new COSet[T](id, replica,  GCounter[Long](id, replica), elementPairs.toMap)
+    new COSet[T](id, replica,  component.GCounter[Long](replica).increment(elementPairs.size.toLong), elementPairs.toMap)
   }
 }

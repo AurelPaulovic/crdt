@@ -89,12 +89,12 @@ class MPNSetTest extends TestSpec {
 	      assertResult(0)(newSet.size)
 	    } 
 	    
-	    "be concurrent with another replica" in {
+	    "be the same as another empty replica" in {
 	      val set1 = MPNSet[String]("set", new NamedReplica("rep1"))
 	      val set2 = MPNSet[String]("set", new NamedReplica("rep2"))
 	      
-	      assert((set1 leq set2).value == false)
-	      assert((set2 leq set1).value == false)
+	      assert((set1 leq set2).value)
+	      assert((set2 leq set1).value)
 	    }
 	  }
 	  
