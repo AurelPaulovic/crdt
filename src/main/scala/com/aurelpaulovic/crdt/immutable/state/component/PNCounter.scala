@@ -22,12 +22,20 @@ import com.aurelpaulovic.crdt.immutable.state.lattice.JoinSemilattice
 sealed trait PNCounter[T] extends JoinSemilattice[PNCounter[T]] {
   protected implicit val num: Numeric[T]
   import num._
+  
+  val zero: T = num.zero
 
   val replica: Replica
 
   def isEmpty(): Boolean
 
   def value(): T
+  
+  def isZero(): Boolean
+  
+  def isOne(): Boolean
+  
+  def isNegative(): Boolean
 
   def increment(by: T): PNCounter[T]
 
@@ -36,6 +44,12 @@ sealed trait PNCounter[T] extends JoinSemilattice[PNCounter[T]] {
   def decrement(by: T): PNCounter[T]
 
   def decrement(): PNCounter[T] = decrement(num.one)
+  
+  def setToOne(): PNCounter[T] = setTo(num.one)
+
+  def setToZero(): PNCounter[T] = setTo(num.zero)
+  
+  def setTo(newValue: T): PNCounter[T]
 
   protected[component] def payload: PNCounter.Payload[T]
 }
@@ -62,10 +76,22 @@ object PNCounter {
 
 final case class EmptyPNCounter[T](val replica: Replica)(implicit protected val num: Numeric[T]) extends PNCounter[T] {
   val value: T = num.zero
+  
+  val isZero: Boolean = true
+  
+  val isNegative: Boolean = false
+  
+  val isOne: Boolean = false
+  
+  def setTo(newValue: T): PNCounter[T] = {
+    if      (newValue == num.zero)        this
+    else if (num.gt(newValue, num.zero))  new NonEmptyPNCounter(replica, newValue, num.zero, PNCounter.Payload.empty[T])
+    else                                  new NonEmptyPNCounter(replica, num.zero, newValue, PNCounter.Payload.empty[T])
+  }
+  
+  def increment(by: T): PNCounter[T] = new NonEmptyPNCounter(replica, by, num.zero, PNCounter.Payload.empty[T])
 
-  def increment(by: T): PNCounter[T] = NonEmptyPNCounter(replica, by, num.zero, PNCounter.Payload.empty[T])
-
-  def decrement(by: T): PNCounter[T] = NonEmptyPNCounter(replica, num.zero, by, PNCounter.Payload.empty[T])
+  def decrement(by: T): PNCounter[T] = new NonEmptyPNCounter(replica, num.zero, by, PNCounter.Payload.empty[T])
 
   protected[component] lazy val payload: PNCounter.Payload[T] = PNCounter.Payload.empty[T]
 
@@ -79,7 +105,7 @@ final case class EmptyPNCounter[T](val replica: Replica)(implicit protected val 
 
   def join(other: PNCounter[T]): PNCounter[T] = {
     if (other.isEmpty) this
-    else NonEmptyPNCounter(replica, num.zero, num.zero, other.payload)
+    else new NonEmptyPNCounter(replica, num.zero, num.zero, other.payload)
   }
 }
 
@@ -93,6 +119,18 @@ case class NonEmptyPNCounter[T](val replica: Replica,
   def value(): T = (outdatedPayload.p.value + localP) - (outdatedPayload.n.value + localN)
 
   val isEmpty: Boolean = false
+  
+  def isZero(): Boolean = value == num.zero
+  
+  def isNegative(): Boolean = value < num.zero
+  
+  def isOne(): Boolean = value == num.one
+  
+  def setTo(newValue: T): PNCounter[T] = {
+    if      (newValue == value)       this
+    else if (num.gt(newValue, value)) increment(newValue - value)
+    else                              decrement(value - newValue)
+  }
 
   def increment(by: T): PNCounter[T] = new NonEmptyPNCounter(replica, localP + by, localN, outdatedPayload)
 

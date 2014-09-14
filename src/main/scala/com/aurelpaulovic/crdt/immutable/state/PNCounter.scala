@@ -29,9 +29,8 @@ class PNCounter[T] private (val id: Id, val replica: Replica, private val counte
   def setToZero(): PNCounter[T] = setTo(num.zero)
 
   private def setTo(newValue: T): PNCounter[T] = {
-    if (newValue < value) new PNCounter[T](id, replica, counter.decrement(value - newValue))
-    else if (newValue == value) this
-    else new PNCounter[T](id, replica, counter.increment(newValue - value))
+    if (newValue == value) this
+    else new PNCounter[T](id, replica, counter.setTo(newValue))
   }
 
   lazy val value: T = counter.value
@@ -44,9 +43,9 @@ class PNCounter[T] private (val id: Id, val replica: Replica, private val counte
 
   def decrement(by: T): PNCounter[T] = new PNCounter[T](id, replica, counter.decrement(by))
 
-  def isZero(): Boolean = (value == num.zero)
+  def isZero(): Boolean = counter.isZero
 
-  def isNegative(): Boolean = (value < num.zero)
+  def isNegative(): Boolean = counter.isNegative
 
   def leq(other: PNCounter[T]): Option[Boolean] = {
     if (other.id == id) Some(counter /<=\ other.counter)
