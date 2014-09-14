@@ -20,8 +20,10 @@ import com.aurelpaulovic.crdt.Id
 import com.aurelpaulovic.crdt.replica.Replica
 import scala.collection.immutable
 
-class COSet [T] private (val id: Id, val replica: Replica, private val clock: component.GCounter[Long], private val elements: Map[T, component.GCounter[Long]]) {
-	def add(ele: T): COSet[T] = {
+class COSet[T] private (val id: Id, val replica: Replica, private val clock: component.GCounter[Long], private val elements: Map[T, component.GCounter[Long]]) extends CRDT[Set[T], COSet[T]] {
+	def value(): Set[T] = elements.keySet
+  
+  def add(ele: T): COSet[T] = {
 	  if (elements.contains(ele)) this
 	  else new COSet[T](id, replica, clock.increment, elements + (ele -> clock.increment))
 	}
