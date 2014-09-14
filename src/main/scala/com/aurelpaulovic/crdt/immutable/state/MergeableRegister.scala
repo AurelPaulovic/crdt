@@ -21,7 +21,7 @@ import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.util.VectorClock
 import com.aurelpaulovic.crdt.util.Mergeable
 
-class MergeableRegister[T: Mergeable] private (val id: Id, private[this] val replica: Replica, val value: T, protected val clock: VectorClock) {
+class MergeableRegister[T: Mergeable] private (val id: Id, val replica: Replica, val value: T, protected val clock: VectorClock) extends CRDT[T, MergeableRegister[T]] {
   import Mergeable._
   
 	def assign(value: T): MergeableRegister[T] = new MergeableRegister(id, replica, value, clock.increment)
