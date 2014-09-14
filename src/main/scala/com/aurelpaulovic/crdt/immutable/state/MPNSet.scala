@@ -21,14 +21,16 @@ import scala.collection.immutable
 import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.Id
 
-class MPNSet[T] private (val id: Id, private[this] val replica: Replica, private val clock: component.GCounter[Long], private val elements: immutable.Map[T, PNCounter[Int]]) {
-	def add(ele: T): MPNSet[T] = elements.get(ele) match {
+class MPNSet[T] private (val id: Id, val replica: Replica, private val clock: component.GCounter[Long], private val elements: immutable.Map[T, component.PNCounter[Int]]) extends CRDT[Set[T], MPNSet[T]] {
+	def value(): Set[T] = (elements.collect{case (ele, counter) if elementExists(counter) => ele}).toSet
+  
+  def add(ele: T): MPNSet[T] = elements.get(ele) match {
 	  case None => new MPNSet(id, replica, clock.increment, elements + newElement(ele))
 	  case Some(counter) if elementExists(counter) => this
 	  case Some(counter) => new MPNSet(id, replica, clock.increment, elements.updated(ele, counter.setToOne))
 	}
 	
-	private def newElement(ele: T): (T, PNCounter[Int]) = (ele, PNCounter(id, replica, 1))
+	private def newElement(ele: T): (T, component.PNCounter[Int]) = (ele, component.PNCounter(replica, 1))
 	
 	def remove(ele: T): MPNSet[T] = elements.get(ele) match {
 	  case None => this
@@ -48,7 +50,7 @@ class MPNSet[T] private (val id: Id, private[this] val replica: Replica, private
 	  case (sum, what) => sum
 	}
 	
-	private def elementExists(counter: PNCounter[Int]): Boolean = !(counter.isNegative ||  counter.isZero)
+	private def elementExists(counter: component.PNCounter[Int]): Boolean = counter.value > counter.zero
 	
 	def merge(other: MPNSet[T]): Option[MPNSet[T]] = other.id match {
 	  case `id` => 
@@ -58,7 +60,7 @@ class MPNSet[T] private (val id: Id, private[this] val replica: Replica, private
 	    		} yield {
 	    		  elements.get(otherEle) match {
 	    		    case None => (otherEle, otherCounter)
-	    		    case Some(thisCounter) => (otherEle, thisCounter.merge(otherCounter).get)
+	    		    case Some(thisCounter) => (otherEle, thisCounter /+\ otherCounter)
 	    		  }
 	    		}
 	    )
@@ -81,7 +83,7 @@ object MPNSet {
   def apply[T](id: Id, replica: Replica, elements: T*) = {
     val elementPairs = for {
       ele <- elements
-    } yield (ele, PNCounter(id, replica, 1))
+    } yield (ele, component.PNCounter(replica, 1))
     
     new MPNSet[T](id, replica,  component.GCounter[Long](replica).increment(elementPairs.size.toLong), elementPairs.toMap)
   }
