@@ -21,13 +21,15 @@ import com.aurelpaulovic.crdt.Id
 import com.aurelpaulovic.crdt.util.TotalOrdering
 import com.aurelpaulovic.crdt.util.TotalTimeClock
 
-class TotallyOrderedRegister[T, R <: Replica] private (val id: Id, private[this] val replica: R with Ordered[R], val value: T, protected val clock: TotalTimeClock[R]) {
-	def assign(value: T): TotallyOrderedRegister[T, R] = new TotallyOrderedRegister(id, replica, value, TotalTimeClock.makeGreaterThan(replica, clock))
+class TotallyOrderedRegister[T, R <: Replica] private (val id: Id, private[this] val pReplica: R with Ordered[R], val value: T, protected val clock: TotalTimeClock[R]) extends CRDT[T, TotallyOrderedRegister[T,R]] {
+  val replica: Replica = pReplica
+  
+  def assign(value: T): TotallyOrderedRegister[T, R] = new TotallyOrderedRegister(id, pReplica, value, TotalTimeClock.makeGreaterThan(pReplica, clock))
 	
 	def merge(other: TotallyOrderedRegister[T, R]): Option[TotallyOrderedRegister[T, R]] = other.id match {
 	  case `id` => 
 	  	if (clock >= other.clock) Some(this)
-	  	else Some(new TotallyOrderedRegister(id, replica, other.value, other.clock))
+	  	else Some(new TotallyOrderedRegister(id, pReplica, other.value, other.clock))
 	  case _ => None
 	}
 	
