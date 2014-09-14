@@ -14,7 +14,7 @@
  * limitations under the License. 
  */
 
-package com.aurelpaulovic.crdt.util
+package com.aurelpaulovic.crdt
 
 import org.scalatest._
 

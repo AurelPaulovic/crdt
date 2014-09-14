@@ -16,6 +16,7 @@
 
 package com.aurelpaulovic.crdt.util
 
+import com.aurelpaulovic.crdt.TestSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
