@@ -52,11 +52,12 @@ Remove of an element is symmetric to adding an element. When removing an element
 The set should not suffer from any anomalies associated with PNSet or the version by Molli, Weiss and Skaf. When an element is added by a replica, it is guaranteed to be in the set (for that replica and version of set). When an element is removed by a replica, it is guaranteed to be not present in the set (for that replica and version of set).
 
 ### COSet ###
-Causaly Ordered Set is that uses a logical clock attached to the set to tag every element added to the set. When an element is removed from the set, it can be simply removed from the payload without having to store any kind of tombstone.
+Causaly Ordered Set is that uses a logical clock attached to the set to tag every element added to the set. When an element is removed from the set, it can be simply removed from the payload without having to store any kind of tombstone. This is basically an implementation of Optimized OR-Set [3].
 
 When two replicas of COSet are merged, then all elements that are present in both replicas will be kept in the merged replica as well but the tags of the elements will be merged with each other for each pair shared pair. Every element that is present in only one of the replicas and is concurrent with the other replica (tag of the element is concurrent with current logical clock of the other replica) will be in kept in the resulting merged set as well. Every element that is present in only one of the replicas but has its tag smaller than the current clock of the other replica (meaning that the other replica has already seen it but removed it afterwards) will be discarded.
  
 ## Bibliography ##
 1. [Shapiro, M., et. al.: *A comprehensive study of convergent and commutative replicated data types.* Technical Report, 2011.](http://pagesperso-systeme.lip6.fr/Marc.Shapiro/papers/Comprehensive-CRDTs-RR7506-2011-01.pdf)
-2. [Aslan, K., el. al.: *C-Set: a Commutative Replicated Data Type for Semantics Stores.* Red: Fourth International Workshop on RESource Discovery, 2011.](http://hal.inria.fr/docs/00/59/45/90/PDF/main.pdf)
+2. [Aslan, K., et. al.: *C-Set: a Commutative Replicated Data Type for Semantics Stores.* Red: Fourth International Workshop on RESource Discovery, 2011.](http://hal.inria.fr/docs/00/59/45/90/PDF/main.pdf)
+3. [Bieniusa, A., et. al.: *An optimized conflict-free replicated set* CoRR, 2012](http://arxiv.org/pdf/1210.3368v1.pdf)
 
