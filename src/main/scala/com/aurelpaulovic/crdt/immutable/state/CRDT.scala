@@ -18,8 +18,9 @@ package com.aurelpaulovic.crdt.immutable.state
 
 import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.Id
+import com.aurelpaulovic.crdt.RDT
 
-trait CRDT[E, T] extends Serializable {
+trait CRDT[E, T] extends RDT with Serializable {
   val id: Id
   val replica: Replica
 	def value(): E
