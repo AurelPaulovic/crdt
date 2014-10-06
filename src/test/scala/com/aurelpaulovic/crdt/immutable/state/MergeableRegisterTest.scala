@@ -21,6 +21,8 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import com.aurelpaulovic.crdt.replica.NamedReplica._
 import com.aurelpaulovic.crdt.util.Mergeable
+import com.aurelpaulovic.crdt.replica.NamedReplica
+import com.aurelpaulovic.crdt.RDT
 
 @RunWith(classOf[JUnitRunner])
 class MergeableRegisterTest extends TestSpec {
@@ -28,6 +30,10 @@ class MergeableRegisterTest extends TestSpec {
   
   implicit object MergeableString extends Mergeable[String] {
     def merge(thisValue: String, thatValue: String) = Seq(thisValue, thatValue).sorted.mkString(", ")
+  }
+  
+  implicit object MergeableInt extends Mergeable[Int] {
+    def merge(thisValue: Int, thatValue: Int) = thisValue + thatValue
   }
   
 	"A MergableRegister" when {
@@ -97,5 +103,34 @@ class MergeableRegisterTest extends TestSpec {
 	      assert(mr1.merge(mr2).value.value == "a, b")
 	    }
 	  }
+	  
+	  "rdt type equal compared" should {
+      "be different if they are different CRDT types" in {
+        val rep = NamedReplica("rep1")
+        val rdt1 = MergeableRegister[String]("id1", rep, "a").asInstanceOf[RDT]
+        val rdt2 = GCounter[Int]("id2", rep).asInstanceOf[RDT]
+        
+        assert(rdt1.rdtTypeEquals(rdt2) == false)
+        assert(rdt2.rdtTypeEquals(rdt1) == false)
+      }
+      
+      "be the same if the are of the same CRDT type" in {
+        val rep = NamedReplica("rep1")
+        val rdt1 = MergeableRegister[String]("id1", rep, "a").asInstanceOf[RDT]
+        val rdt2 = MergeableRegister[String]("id2", rep, "b").asInstanceOf[RDT]
+        
+        assert(rdt1.rdtTypeEquals(rdt2))
+        assert(rdt2.rdtTypeEquals(rdt1))
+      }
+      
+      "be different if the are of the same CRDT type but have different type parameter" in {
+        val rep = NamedReplica("rep1")
+        val rdt1 = MergeableRegister[String]("id1", rep, "a").asInstanceOf[RDT]
+        val rdt2 = MergeableRegister[Int]("id2", rep, 1).asInstanceOf[RDT]
+        
+        assert(rdt1.rdtTypeEquals(rdt2) == false)
+        assert(rdt2.rdtTypeEquals(rdt1) == false)
+      }
+    }
 	}
 }

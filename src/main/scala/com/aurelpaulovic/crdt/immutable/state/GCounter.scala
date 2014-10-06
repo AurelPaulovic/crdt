@@ -19,9 +19,11 @@ package com.aurelpaulovic.crdt.immutable.state
 import com.aurelpaulovic.crdt.replica.Replica
 import scala.collection.immutable
 import com.aurelpaulovic.crdt.Id
+import scala.reflect.runtime.universe._
+import scala.reflect.ClassTag
 
-class GCounter[T] private (val id: Id, val replica: Replica, private val counter: component.GCounter[T])(implicit num: Numeric[T]) extends CRDT[T, GCounter[T]] {
-  def this(id: Id, replica: Replica)(implicit num: Numeric[T]) = this(id, replica, component.GCounter(replica))
+class GCounter[T] private (val id: Id, val replica: Replica, private val counter: component.GCounter[T])(implicit num: Numeric[T], paramType: TypeTag[T]) extends CRDT[T, GCounter[T]] {
+  def this(id: Id, replica: Replica)(implicit num: Numeric[T], paramType: TypeTag[T]) = this(id, replica, component.GCounter(replica))
 
   lazy val value: T = counter.value
 
@@ -38,12 +40,21 @@ class GCounter[T] private (val id: Id, val replica: Replica, private val counter
     if (other.id == id) Some(new GCounter[T](id, replica, counter /+\ other.counter))
     else None
   }
+  
+  protected def canRdtTypeEqual[X: TypeTag](other: Any) = {
+    typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.GCounter[_]]
+  }
+
+  def rdtTypeEquals(other: Any) = other match {
+    case that: com.aurelpaulovic.crdt.immutable.state.GCounter[_] => that canRdtTypeEqual this
+    case _ => false
+  }
 
   override def toString(): String = s"GCounter($id, $replica, $counter) with value $value"
 }
 
 object GCounter {
-  def apply[T](id: Id, replica: Replica)(implicit num: Numeric[T]): GCounter[T] = new GCounter[T](id, replica)
+  def apply[T](id: Id, replica: Replica)(implicit num: Numeric[T], paramtType: TypeTag[T]): GCounter[T] = new GCounter[T](id, replica)
 
-  def apply[T](id: Id, replica: Replica, value: T)(implicit num: Numeric[T]): GCounter[T] = new GCounter[T](id, replica).increment(value)
+  def apply[T](id: Id, replica: Replica, value: T)(implicit num: Numeric[T], paramType: TypeTag[T]): GCounter[T] = new GCounter[T](id, replica).increment(value)
 }

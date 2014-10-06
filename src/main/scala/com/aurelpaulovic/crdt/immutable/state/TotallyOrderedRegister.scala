@@ -20,8 +20,9 @@ import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.Id
 import com.aurelpaulovic.crdt.util.TotalOrdering
 import com.aurelpaulovic.crdt.util.TotalTimeClock
+import scala.reflect.runtime.universe._
 
-class TotallyOrderedRegister[T, R <: Replica] private (val id: Id, private[this] val pReplica: R with Ordered[R], val value: T, protected val clock: TotalTimeClock[R]) extends CRDT[T, TotallyOrderedRegister[T,R]] {
+class TotallyOrderedRegister[T, R <: Replica] private (val id: Id, private[this] val pReplica: R with Ordered[R], val value: T, protected val clock: TotalTimeClock[R])(implicit paramType: TypeTag[T]) extends CRDT[T, TotallyOrderedRegister[T,R]] {
   val replica: Replica = pReplica
   
   def assign(value: T): TotallyOrderedRegister[T, R] = new TotallyOrderedRegister(id, pReplica, value, TotalTimeClock.makeGreaterThan(pReplica, clock))
@@ -38,9 +39,18 @@ class TotallyOrderedRegister[T, R <: Replica] private (val id: Id, private[this]
 	  case _ => None
 	}
 	
+	protected def canRdtTypeEqual[X: TypeTag](other: Any) = {
+    typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.TotallyOrderedRegister[_,_]]
+  }
+
+  override def rdtTypeEquals(other: Any) = other match {
+    case that: com.aurelpaulovic.crdt.immutable.state.TotallyOrderedRegister[T, R] => that canRdtTypeEqual this
+    case _ => false
+  }
+	
 	override def toString = s"TotallyOrderedRegister($value)"
 }
 
 object TotallyOrderedRegister {
-  def apply[R <: Replica, T](id: Id, replica: R with Ordered[R], value: T): TotallyOrderedRegister[T, R] = new TotallyOrderedRegister(id, replica, value, TotalTimeClock(replica))
+  def apply[R <: Replica, T](id: Id, replica: R with Ordered[R], value: T)(implicit paramType: TypeTag[T]): TotallyOrderedRegister[T, R] = new TotallyOrderedRegister(id, replica, value, TotalTimeClock(replica))
 }

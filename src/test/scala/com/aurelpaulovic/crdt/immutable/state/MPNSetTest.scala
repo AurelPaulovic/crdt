@@ -20,8 +20,8 @@ package com.aurelpaulovic.crdt.immutable.state
 import com.aurelpaulovic.crdt.TestSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-
 import com.aurelpaulovic.crdt.replica.NamedReplica
+import com.aurelpaulovic.crdt.RDT
 
 @RunWith(classOf[JUnitRunner])
 class MPNSetTest extends TestSpec {
@@ -199,5 +199,34 @@ class MPNSetTest extends TestSpec {
 	      assert((set12_a leq set12_b).value && (set12_b leq set12_a).value) 
 	    }
 	  }
+	  
+	  "rdt type equal compared" should {
+      "be different if they are different CRDT types" in {
+        val rep = NamedReplica("rep1")
+        val rdt1 = MPNSet[Int]("id1", rep).asInstanceOf[RDT]
+        val rdt2 = GCounter[Int]("id2", rep).asInstanceOf[RDT]
+        
+        assert(rdt1.rdtTypeEquals(rdt2) == false)
+        assert(rdt2.rdtTypeEquals(rdt1) == false)
+      }
+      
+      "be the same if the are of the same CRDT type" in {
+        val rep = NamedReplica("rep1")
+        val rdt1 = MPNSet[Int]("id1", rep).asInstanceOf[RDT]
+        val rdt2 = MPNSet[Int]("id2", rep).asInstanceOf[RDT]
+        
+        assert(rdt1.rdtTypeEquals(rdt2))
+        assert(rdt2.rdtTypeEquals(rdt1))
+      }
+      
+      "be different if the are of the same CRDT type but have different type parameter" in {
+        val rep = NamedReplica("rep1")
+        val rdt1 = MPNSet[Int]("id1", rep).asInstanceOf[RDT]
+        val rdt2 = MPNSet[Long]("id2", rep).asInstanceOf[RDT]
+        
+        assert(rdt1.rdtTypeEquals(rdt2) == false)
+        assert(rdt2.rdtTypeEquals(rdt1) == false)
+      }
+    }
 	} 
 }

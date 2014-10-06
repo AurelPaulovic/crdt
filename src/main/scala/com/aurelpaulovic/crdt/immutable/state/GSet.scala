@@ -18,8 +18,9 @@ package com.aurelpaulovic.crdt.immutable.state
 
 import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.Id
+import scala.reflect.runtime.universe._
 
-class GSet[T] private (val id: Id, val replica: Replica, val elements: component.GSet[T]) extends CRDT[Set[T], GSet[T]] {
+class GSet[T] private (val id: Id, val replica: Replica, val elements: component.GSet[T])(implicit paramType: TypeTag[T]) extends CRDT[Set[T], GSet[T]] {
   def value(): Set[T] = elements.value
   
   def add(ele: T): GSet[T] = {
@@ -43,11 +44,20 @@ class GSet[T] private (val id: Id, val replica: Replica, val elements: component
     else None
   }
   
+  protected def canRdtTypeEqual[X: TypeTag](other: Any) = {
+    typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.GSet[_]]
+  }
+
+  override def rdtTypeEquals(other: Any) = other match {
+    case that: com.aurelpaulovic.crdt.immutable.state.GSet[_] => that canRdtTypeEqual this
+    case _ => false
+  }
+  
   override def toString(): String = s"GSet($id, $replica) with elements ${elements.value}"
 }
 
 object GSet {
-  def apply[T](id: Id, replica: Replica): GSet[T] = new GSet[T](id, replica, component.GSet[T]())
+  def apply[T](id: Id, replica: Replica)(implicit paramType: TypeTag[T]): GSet[T] = new GSet[T](id, replica, component.GSet[T]())
   
-  def apply[T](id: Id, replica: Replica, elements: T*): GSet[T] = new GSet[T](id, replica, component.GSet[T](elements))
+  def apply[T](id: Id, replica: Replica, elements: T*)(implicit paramType: TypeTag[T]): GSet[T] = new GSet[T](id, replica, component.GSet[T](elements))
 }

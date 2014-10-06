@@ -20,8 +20,9 @@ import com.aurelpaulovic.crdt.Id
 import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.util.VectorClock
 import com.aurelpaulovic.crdt.util.Mergeable
+import scala.reflect.runtime.universe._
 
-class MergeableRegister[T: Mergeable] private (val id: Id, val replica: Replica, val value: T, protected val clock: VectorClock) extends CRDT[T, MergeableRegister[T]] {
+class MergeableRegister[T: Mergeable] private (val id: Id, val replica: Replica, val value: T, protected val clock: VectorClock)(implicit paramType: TypeTag[T]) extends CRDT[T, MergeableRegister[T]] {
   import Mergeable._
   
 	def assign(value: T): MergeableRegister[T] = new MergeableRegister(id, replica, value, clock.increment)
@@ -42,9 +43,18 @@ class MergeableRegister[T: Mergeable] private (val id: Id, val replica: Replica,
 	  case _ => None
 	}
 	
+	protected def canRdtTypeEqual[X: TypeTag](other: Any) = {
+    typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.MergeableRegister[_]]
+  }
+
+  override def rdtTypeEquals(other: Any) = other match {
+    case that: com.aurelpaulovic.crdt.immutable.state.MergeableRegister[T] => that canRdtTypeEqual this
+    case _ => false
+  }
+	
 	override def toString(): String = s"MergeableRegister($value)"
 }
 
 object MergeableRegister {
-  def apply[T: Mergeable](id: Id, replica: Replica, value: T): MergeableRegister[T] = new MergeableRegister(id, replica, value, VectorClock(replica))
+  def apply[T: Mergeable](id: Id, replica: Replica, value: T)(implicit paramType: TypeTag[T]): MergeableRegister[T] = new MergeableRegister(id, replica, value, VectorClock(replica))
 }

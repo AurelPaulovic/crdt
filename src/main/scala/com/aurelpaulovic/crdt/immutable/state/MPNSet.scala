@@ -20,8 +20,9 @@ package com.aurelpaulovic.crdt.immutable.state
 import scala.collection.immutable
 import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.Id
+import scala.reflect.runtime.universe._
 
-class MPNSet[T] private (val id: Id, val replica: Replica, private val clock: component.GCounter[Long], private val elements: immutable.Map[T, component.PNCounter[Int]]) extends CRDT[Set[T], MPNSet[T]] {
+class MPNSet[T] private (val id: Id, val replica: Replica, private val clock: component.GCounter[Long], private val elements: immutable.Map[T, component.PNCounter[Int]])(implicit paramType: TypeTag[T]) extends CRDT[Set[T], MPNSet[T]] {
 	def value(): Set[T] = (elements.collect{case (ele, counter) if elementExists(counter) => ele}).toSet
   
   def add(ele: T): MPNSet[T] = elements.get(ele) match {
@@ -74,13 +75,22 @@ class MPNSet[T] private (val id: Id, val replica: Replica, private val clock: co
 	  case _ => None
 	}
 	
+	protected def canRdtTypeEqual[X: TypeTag](other: Any) = {
+    typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.MPNSet[_]]
+  }
+
+  override def rdtTypeEquals(other: Any) = other match {
+    case that: com.aurelpaulovic.crdt.immutable.state.MPNSet[T] => that canRdtTypeEqual this
+    case _ => false
+  }
+	
 	override def toString(): String = s"MPNSet($id, $replica, $clock, $elements)"
 }
 
 object MPNSet {
-  def apply[T](id: Id, replica: Replica): MPNSet[T] = new MPNSet[T](id, replica, component.GCounter[Long](replica), immutable.Map.empty)
+  def apply[T](id: Id, replica: Replica)(implicit paramType: TypeTag[T]): MPNSet[T] = new MPNSet[T](id, replica, component.GCounter[Long](replica), immutable.Map.empty)
   
-  def apply[T](id: Id, replica: Replica, elements: T*) = {
+  def apply[T](id: Id, replica: Replica, elements: T*)(implicit paramType: TypeTag[T]) = {
     val elementPairs = for {
       ele <- elements
     } yield (ele, component.PNCounter(replica, 1))

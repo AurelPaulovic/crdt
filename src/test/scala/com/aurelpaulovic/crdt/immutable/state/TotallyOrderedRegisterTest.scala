@@ -19,6 +19,7 @@ package com.aurelpaulovic.crdt.immutable.state
 import com.aurelpaulovic.crdt.TestSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import com.aurelpaulovic.crdt.RDT
 
 @RunWith(classOf[JUnitRunner])
 class TotallyOrderedRegisterTest extends TestSpec {
@@ -90,5 +91,34 @@ class TotallyOrderedRegisterTest extends TestSpec {
 	      assert(mr2.merge(mr1).value.value == "b")
 	    }
 	  }
+	  
+	  "rdt type equal compared" should {
+      "be different if they are different CRDT types" in {
+        val rep = NamedReplica("rep1")
+        val rdt1 = TotallyOrderedRegister("id1", rep1, "a").asInstanceOf[RDT]
+        val rdt2 = GCounter[Int]("id2", rep).asInstanceOf[RDT]
+        
+        assert(rdt1.rdtTypeEquals(rdt2) == false)
+        assert(rdt2.rdtTypeEquals(rdt1) == false)
+      }
+      
+      "be the same if the are of the same CRDT type" in {
+        val rep = NamedReplica("rep1")
+        val rdt1 = TotallyOrderedRegister("id1", rep, "a").asInstanceOf[RDT]
+        val rdt2 = TotallyOrderedRegister("id2", rep, "a").asInstanceOf[RDT]
+        
+        assert(rdt1.rdtTypeEquals(rdt2))
+        assert(rdt2.rdtTypeEquals(rdt1))
+      }
+      
+      "be different if the are of the same CRDT type but have different type parameter" in {
+        val rep = NamedReplica("rep1")
+        val rdt1 = TotallyOrderedRegister("id1", rep, "a").asInstanceOf[RDT]
+        val rdt2 = TotallyOrderedRegister("id2", rep, 'a).asInstanceOf[RDT]
+        
+        assert(rdt1.rdtTypeEquals(rdt2) == false)
+        assert(rdt2.rdtTypeEquals(rdt1) == false)
+      }
+    }
 	}
 }

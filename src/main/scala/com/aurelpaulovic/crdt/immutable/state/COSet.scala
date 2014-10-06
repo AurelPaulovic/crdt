@@ -19,8 +19,9 @@ package com.aurelpaulovic.crdt.immutable.state
 import com.aurelpaulovic.crdt.Id
 import com.aurelpaulovic.crdt.replica.Replica
 import scala.collection.immutable
+import scala.reflect.runtime.universe._
 
-class COSet[T] private (val id: Id, val replica: Replica, private val clock: component.GCounter[Long], private val elements: Map[T, component.GCounter[Long]]) extends CRDT[Set[T], COSet[T]] {
+class COSet[T] private (val id: Id, val replica: Replica, private val clock: component.GCounter[Long], private val elements: Map[T, component.GCounter[Long]])(implicit paramType: TypeTag[T]) extends CRDT[Set[T], COSet[T]] {
 	def value(): Set[T] = elements.keySet
   
   def add(ele: T): COSet[T] = {
@@ -67,13 +68,22 @@ class COSet[T] private (val id: Id, val replica: Replica, private val clock: com
 	  else None
 	}
 	
+	protected def canRdtTypeEqual[X: TypeTag](other: Any) = {
+    typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.COSet[_]]
+  }
+
+  override def rdtTypeEquals(other: Any) = other match {
+    case that: com.aurelpaulovic.crdt.immutable.state.COSet[_] => that canRdtTypeEqual this
+    case _ => false
+  }
+	
 	override def toString(): String = s"COSet($id, $replica, $clock) with elements ${elements.keys}" 
 }
 
 object COSet {
-  def apply[T](id: Id, replica: Replica): COSet[T] = new COSet[T](id, replica, component.GCounter[Long](replica), immutable.Map.empty)
+  def apply[T](id: Id, replica: Replica)(implicit paramType: TypeTag[T]): COSet[T] = new COSet[T](id, replica, component.GCounter[Long](replica), immutable.Map.empty)
   
-  def apply[T](id: Id, replica: Replica, elements: T*): COSet[T] = {
+  def apply[T](id: Id, replica: Replica, elements: T*)(implicit paramType: TypeTag[T]): COSet[T] = {
     val elementPairs = for {
       ele <- elements
     } yield (ele, component.GCounter[Long](replica, 1))

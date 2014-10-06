@@ -25,6 +25,8 @@ scalacOptions ++= Seq(
 
 libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.0" % "test"
 
+libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.11.2"
+
 libraryDependencies += "junit" % "junit" % "4.8.1" % "test"
 
 EclipseKeys.eclipseOutput := Some("target/eclipse")
