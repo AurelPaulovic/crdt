@@ -48,10 +48,12 @@ class GSet[T] private (val id: Id, val replica: Replica, val elements: component
     typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.GSet[_]]
   }
 
-  override def rdtTypeEquals(other: Any) = other match {
+  def rdtTypeEquals(other: Any) = other match {
     case that: com.aurelpaulovic.crdt.immutable.state.GSet[_] => that canRdtTypeEqual this
     case _ => false
   }
+  
+  def copyForReplica(newReplica: Replica): GSet[T] = new GSet[T](id, newReplica, elements)
   
   override def toString(): String = s"GSet($id, $replica) with elements ${elements.value}"
 }

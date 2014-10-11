@@ -52,7 +52,7 @@ final case class EmptyVectorCounter[T]()(implicit protected val num: Numeric[T])
   val isZero: Boolean = true
 
   val isEmpty: Boolean = true
-
+  
   val payload: immutable.Map[Replica, T] = immutable.Map.empty
 
   def increment(replica: Replica, by: T): VectorCounter[T] = {
@@ -80,7 +80,7 @@ case class NonEmptyVectorCounter[T](val payload: immutable.Map[Replica, T])(impl
   val isZero: Boolean = false
 
   val isEmpty: Boolean = false
-
+  
   def increment(replica: Replica, by: T): VectorCounter[T] = {
     if      (by == num.zero) this
     else if (by > num.zero)  NonEmptyVectorCounter(payload.updated(replica, payload.getOrElse(replica, num.zero) + by))

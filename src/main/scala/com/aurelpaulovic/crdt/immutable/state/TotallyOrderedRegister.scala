@@ -43,10 +43,13 @@ class TotallyOrderedRegister[T, R <: Replica] private (val id: Id, private[this]
     typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.TotallyOrderedRegister[_,_]]
   }
 
-  override def rdtTypeEquals(other: Any) = other match {
+  def rdtTypeEquals(other: Any) = other match {
     case that: com.aurelpaulovic.crdt.immutable.state.TotallyOrderedRegister[T, R] => that canRdtTypeEqual this
     case _ => false
   }
+  
+  def copyForReplica(newReplica: Replica): TotallyOrderedRegister[T, R] = // can throw cast exception
+    new TotallyOrderedRegister(id, newReplica.asInstanceOf[R with Ordered[R]], value, clock.copyForReplica(newReplica.asInstanceOf[R with Ordered[R]]))
 	
 	override def toString = s"TotallyOrderedRegister($value)"
 }

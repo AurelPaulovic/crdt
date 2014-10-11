@@ -71,6 +71,8 @@ class VectorClock private (private[this] val replica: Replica, private[this] val
 	  }
 	}
 	
+	def copyForReplica(newReplica: Replica): VectorClock = VectorClock(newReplica) + this
+	
 	override def toString(): String = s"VectorClock($state)"
 }
 

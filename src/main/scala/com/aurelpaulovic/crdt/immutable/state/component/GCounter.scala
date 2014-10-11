@@ -32,6 +32,8 @@ sealed trait GCounter[T] extends JoinSemilattice[GCounter[T]] {
   def increment(by: T): GCounter[T]
 
   def increment(): GCounter[T] = increment(num.one)
+  
+  def copyForReplica(newReplica: Replica): GCounter[T]
 
   protected[component] def payload: VectorCounter[T]
 }
@@ -44,6 +46,8 @@ object GCounter {
 
 final case class EmptyGCounter[T](val replica: Replica)(implicit protected val num: Numeric[T]) extends GCounter[T] {
   val value: T = num.zero
+  
+  def copyForReplica(newReplica: Replica): GCounter[T] = EmptyGCounter[T](newReplica)
 
   def increment(by: T): GCounter[T] = NonEmptyGCounter(replica, by, VectorCounter.empty)
 
@@ -72,6 +76,8 @@ case class NonEmptyGCounter[T](val replica: Replica,
     if (localValue == num.zero) outdatedPayload
     else outdatedPayload.increment(replica, localValue)
   }
+  
+  def copyForReplica(newReplica: Replica): GCounter[T] = NonEmptyGCounter[T](newReplica, num.zero, payload)
 
   val isEmpty: Boolean = false
 

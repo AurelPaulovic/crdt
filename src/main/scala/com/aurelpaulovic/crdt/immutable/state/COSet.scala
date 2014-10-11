@@ -72,10 +72,12 @@ class COSet[T] private (val id: Id, val replica: Replica, private val clock: com
     typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.COSet[_]]
   }
 
-  override def rdtTypeEquals(other: Any) = other match {
+  def rdtTypeEquals(other: Any) = other match {
     case that: com.aurelpaulovic.crdt.immutable.state.COSet[_] => that canRdtTypeEqual this
     case _ => false
   }
+  
+  def copyForReplica(newReplica: Replica): COSet[T] = new COSet[T](id, newReplica, clock.copyForReplica(newReplica), elements.mapValues(_.copyForReplica(newReplica)))
 	
 	override def toString(): String = s"COSet($id, $replica, $clock) with elements ${elements.keys}" 
 }

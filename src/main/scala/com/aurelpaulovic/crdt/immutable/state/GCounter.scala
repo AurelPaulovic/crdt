@@ -49,12 +49,14 @@ class GCounter[T] private (val id: Id, val replica: Replica, private val counter
     case that: com.aurelpaulovic.crdt.immutable.state.GCounter[_] => that canRdtTypeEqual this
     case _ => false
   }
+  
+  def copyForReplica(newReplica: Replica): GCounter[T] = new GCounter[T](id, newReplica, counter.copyForReplica(newReplica))
 
   override def toString(): String = s"GCounter($id, $replica, $counter) with value $value"
 }
 
 object GCounter {
-  def apply[T](id: Id, replica: Replica)(implicit num: Numeric[T], paramtType: TypeTag[T]): GCounter[T] = new GCounter[T](id, replica)
+  def apply[T](id: Id, replica: Replica)(implicit num: Numeric[T], paramType: TypeTag[T]): GCounter[T] = new GCounter[T](id, replica)
 
   def apply[T](id: Id, replica: Replica, value: T)(implicit num: Numeric[T], paramType: TypeTag[T]): GCounter[T] = new GCounter[T](id, replica).increment(value)
 }

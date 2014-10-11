@@ -62,10 +62,12 @@ class PNCounter[T] private (val id: Id, val replica: Replica, private val counte
     typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.PNCounter[_]]
   }
 
-  override def rdtTypeEquals(other: Any) = other match {
+  def rdtTypeEquals(other: Any) = other match {
     case that: com.aurelpaulovic.crdt.immutable.state.PNCounter[_] => that canRdtTypeEqual this
     case _ => false
   }
+  
+  def copyForReplica(newReplica: Replica): PNCounter[T] = new PNCounter[T](id, newReplica, counter.copyForReplica(newReplica))
 
   override def toString(): String = s"PNCounter($id, $replica, $counter) with value $value"
 }

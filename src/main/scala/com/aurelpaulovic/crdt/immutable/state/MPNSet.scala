@@ -79,10 +79,12 @@ class MPNSet[T] private (val id: Id, val replica: Replica, private val clock: co
     typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.MPNSet[_]]
   }
 
-  override def rdtTypeEquals(other: Any) = other match {
+  def rdtTypeEquals(other: Any) = other match {
     case that: com.aurelpaulovic.crdt.immutable.state.MPNSet[T] => that canRdtTypeEqual this
     case _ => false
   }
+  
+  def copyForReplica(newReplica: Replica): MPNSet[T] = new MPNSet[T](id, newReplica, clock.copyForReplica(newReplica), elements.mapValues(_.copyForReplica(newReplica)))
 	
 	override def toString(): String = s"MPNSet($id, $replica, $clock, $elements)"
 }

@@ -47,10 +47,12 @@ class MergeableRegister[T: Mergeable] private (val id: Id, val replica: Replica,
     typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.MergeableRegister[_]]
   }
 
-  override def rdtTypeEquals(other: Any) = other match {
+  def rdtTypeEquals(other: Any) = other match {
     case that: com.aurelpaulovic.crdt.immutable.state.MergeableRegister[T] => that canRdtTypeEqual this
     case _ => false
   }
+  
+  def copyForReplica(newReplica: Replica): MergeableRegister[T] = new MergeableRegister(id, newReplica, value, clock.copyForReplica(newReplica))
 	
 	override def toString(): String = s"MergeableRegister($value)"
 }

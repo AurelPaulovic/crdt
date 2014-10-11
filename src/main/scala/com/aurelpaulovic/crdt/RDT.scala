@@ -16,8 +16,11 @@
 
 package com.aurelpaulovic.crdt
 
+import com.aurelpaulovic.crdt.replica.Replica
+
 trait RDT extends RdtTypeEqual {
   def id: Id
   def leqRDT(other: RDT): Option[Boolean]
   def mergeRDT(other: RDT): Option[RDT]
+  def copyForReplica(newReplica: Replica): RDT
 }

@@ -52,6 +52,8 @@ sealed trait PNCounter[T] extends JoinSemilattice[PNCounter[T]] {
   def setTo(newValue: T): PNCounter[T]
 
   protected[component] def payload: PNCounter.Payload[T]
+  
+  def copyForReplica(newReplica: Replica): PNCounter[T]
 }
 
 object PNCounter {
@@ -82,6 +84,8 @@ final case class EmptyPNCounter[T](val replica: Replica)(implicit protected val 
   val isNegative: Boolean = false
   
   val isOne: Boolean = false
+  
+  def copyForReplica(newReplica: Replica): PNCounter[T] = new EmptyPNCounter[T](newReplica)
   
   def setTo(newValue: T): PNCounter[T] = {
     if      (newValue == num.zero)        this
@@ -125,6 +129,8 @@ case class NonEmptyPNCounter[T](val replica: Replica,
   def isNegative(): Boolean = value < num.zero
   
   def isOne(): Boolean = value == num.one
+  
+  def copyForReplica(newReplica: Replica): PNCounter[T] = new NonEmptyPNCounter(newReplica, num.zero, num.zero, payload)
   
   def setTo(newValue: T): PNCounter[T] = {
     if      (newValue == value)       this
