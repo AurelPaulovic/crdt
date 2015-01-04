@@ -2,7 +2,7 @@
 [![License](http://img.shields.io/badge/license-Apache%202.0-brightgreen.svg)](https://github.com/AurelPaulovic/crdt/blob/master/LICENSE)
 
 # CRDT #
-**WARNING** currently, this is work in progress and should not be used!
+**WARNING** Currently, this is work in progress and should not be used!
 
 This is a Scala library implementing Convergent and Commutative Replicated Data Types (CRDT) [1].
 
