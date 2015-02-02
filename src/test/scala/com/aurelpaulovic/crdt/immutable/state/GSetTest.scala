@@ -24,24 +24,23 @@ import com.aurelpaulovic.crdt.RDT
 
 @RunWith(classOf[JUnitRunner])
 class GSetTest extends TestSpec {
-  trait EmptySet {
-    val set = GSet[String]("set", new NamedReplica("rep"))
-  }
+  def emptySet: GSet[String] = GSet[String]("set", new NamedReplica("rep"))
   
-  trait NonEmptySet {
-    val set = GSet("set", new NamedReplica("rep"), "a", "b", "c")
-  }
+  def nonEmptySet: GSet[String] = GSet("set", new NamedReplica("rep"), "a", "b", "c")
   
   "A GSet" when {
     "initialized to empty" should {
-      "be empty" in new EmptySet {
+      "be empty" in {
+        val set = emptySet
+        
         assert(set.isEmpty)
         assert(!set.contains("a"))
         assert(set.value.isEmpty)
         assertResult(0)(set.size())
       }
       
-      "after adding an element be non-empty and contain that element" in new EmptySet {
+      "after adding an element be non-empty and contain that element" in {
+        val set = emptySet
         val newSet = set.add("a")
         
         assert(!newSet.isEmpty)
@@ -49,7 +48,8 @@ class GSetTest extends TestSpec {
         assertResult(1)(newSet.size())
       }
       
-      "after adding the same element twice still contain the element only once" in new EmptySet {
+      "after adding the same element twice still contain the element only once" in {
+        val set = emptySet
         val newSet = set.add("a").add("a")
         
         assert(!newSet.isEmpty)
@@ -57,14 +57,16 @@ class GSetTest extends TestSpec {
         assertResult(1)(newSet.size())
       }
       
-      "after adding some element be greater than the empty set" in new EmptySet {
+      "after adding some element be greater than the empty set" in {
+        val set = emptySet
         val newSet = set.add("a")
         
         assert((set leq newSet).value)
         assert((newSet leq set).value == false)
       }
       
-      "stay empty when merged with itself" in new EmptySet {
+      "stay empty when merged with itself" in {
+        val set = emptySet
         val newSet = (set merge set).get
         
         assert((newSet leq set).value)
@@ -83,7 +85,9 @@ class GSetTest extends TestSpec {
     }
     
     "with some elements" should {
-      "contain all the elements" in new NonEmptySet {
+      "contain all the elements" in {
+        val set = nonEmptySet
+        
         assert(!set.isEmpty)
         assertResult(3)(set.size)
         assert(set.contains("a"))
@@ -91,19 +95,22 @@ class GSetTest extends TestSpec {
         assert(set.contains("c"))
       }
       
-      "be equal to iself after adding an already existing element" in new NonEmptySet {
+      "be equal to iself after adding an already existing element" in {
+        val set = nonEmptySet
         val newSet = set.add("a")
         assert((newSet leq set).value && (set leq newSet).value)
       }
       
-      "be leq than itself with some new element added" in new NonEmptySet {
+      "be leq than itself with some new element added" in {
+        val set = nonEmptySet
         val newSet = set.add("d")
         
         assert((set leq newSet).value)
         assert((newSet leq set).value == false)
       }
 
-      "stay the same when merged with itself" in new NonEmptySet {
+      "stay the same when merged with itself" in {
+        val set = nonEmptySet
         val newSet = (set merge set).get
         
         assert((newSet leq set).value && (set leq newSet).value)

@@ -25,23 +25,21 @@ import com.aurelpaulovic.crdt.RDT
 
 @RunWith(classOf[JUnitRunner])
 class COSetTest extends TestSpec {
-  trait EmptySet {
-    val set = COSet[String]("set", new NamedReplica("rep"))
-  }
+  def emptySet: COSet[String] = COSet[String]("set", new NamedReplica("rep"))
   
-  trait NonEmptySet {
-    val set = COSet("set", new NamedReplica("rep"), "a", "b", "c")
-  }
+  def nonEmptySet: COSet[String] = COSet("set", new NamedReplica("rep"), "a", "b", "c")
   
 	"A COSet" when {
 	  "initialized to empty" should {
-	    "be empty" in new EmptySet {
+	    "be empty" in {
+        val set = emptySet
 	      assert(set.isEmpty)
 	      assert(!set.contains("a"))
 	      assertResult(0)(set.size())
 	    }
 	    
-	    "after adding an element be non-empty and contain that element" in new EmptySet {
+	    "after adding an element be non-empty and contain that element" in {
+        val set = emptySet
 	      val newSet = set.add("a")
 	      
 	      assert(!newSet.isEmpty)
@@ -49,7 +47,8 @@ class COSetTest extends TestSpec {
 	      assertResult(1)(newSet.size())
 	    }
 	    
-	    "after adding and then removing an element be empty" in new EmptySet {
+	    "after adding and then removing an element be empty" in {
+        val set = emptySet
 	      val newSet = set.add("a").remove("a")
 	      
 	      assert(!newSet.contains("a"))
@@ -57,7 +56,8 @@ class COSetTest extends TestSpec {
 	      assertResult(0)(newSet.size())
 	    }
 	    
-	    "after removing a non existing element be still empty" in new EmptySet {
+	    "after removing a non existing element be still empty" in {
+        val set = emptySet
 	      val newSet = set.remove("a")
 	      
 	      assert(newSet.isEmpty)
@@ -65,7 +65,8 @@ class COSetTest extends TestSpec {
 	      assertResult(0)(newSet.size())
 	    }
 	    
-	    "after adding the element twice and removing it once be empty" in new EmptySet {
+	    "after adding the element twice and removing it once be empty" in {
+        val set = emptySet
 	      val newSet = set.add("a").add("a").remove("a")
 	      
 	      assert(newSet.isEmpty)
@@ -73,14 +74,16 @@ class COSetTest extends TestSpec {
 	      assertResult(0)(newSet.size())
 	    }
 	    
-	    "after adding some element be greater than the empty set" in new EmptySet {
+	    "after adding some element be greater than the empty set" in {
+        val set = emptySet
 	      val newSet = set.add("a")
 	      
 	      assert((set leq newSet).value)
 	      assert((newSet leq set).value == false)
 	    }
 	    
-	    "stay empty when merged with itself" in new EmptySet {
+	    "stay empty when merged with itself" in {
+        val set = emptySet
 	      val newSet = (set merge set).get
 	      
 	      assert((newSet leq set).value)
@@ -99,7 +102,9 @@ class COSetTest extends TestSpec {
 	  }
 	  
 	  "with some elements" should {
-	    "contain all the elements" in new NonEmptySet {
+	    "contain all the elements" in {
+        val set = nonEmptySet
+        
 	      assert(!set.isEmpty)
 	      assertResult(3)(set.size)
 	      assert(set.contains("a"))
@@ -107,7 +112,9 @@ class COSetTest extends TestSpec {
 	      assert(set.contains("c"))
 	    }
 	    
-	    "be equal to iself after removing a nonexisting element or adding an already existing element" in new NonEmptySet {
+	    "be equal to iself after removing a nonexisting element or adding an already existing element" in {
+        val set = nonEmptySet
+        
 	      val newSet = set.add("a")
 	      assert((newSet leq set).value && (set leq newSet).value)
 	      
@@ -115,21 +122,24 @@ class COSetTest extends TestSpec {
 	      assert((newSet2 leq set).value && (set leq newSet2).value)
 	    }
 	    
-	    "be leq than itself with some new element added" in new NonEmptySet {
+	    "be leq than itself with some new element added" in {
+        val set = nonEmptySet
 	      val newSet = set.add("d")
 	      
 	      assert((set leq newSet).value)
 	      assert((newSet leq set).value == false)
 	    }
 	    
-	    "be leq than itself with some element removed" in new NonEmptySet {
+	    "be leq than itself with some element removed" in {
+        val set = nonEmptySet
 	      val newSet = set.remove("b")
 	      
 	      assert((set leq newSet).value)
 	      assert((newSet leq set).value == false)
 	    }
 	    
-	    "stay the same when merged with itself" in new NonEmptySet {
+	    "stay the same when merged with itself" in {
+        val set = nonEmptySet
 	      val newSet = (set merge set).get
 	      
 	      assert((newSet leq set).value && (set leq newSet).value)

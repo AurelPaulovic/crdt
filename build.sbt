@@ -4,7 +4,7 @@ name := "crdt"
 
 version := "0.1"
 
-scalaVersion := "2.11.2"
+scalaVersion := "2.11.5"
 
 scalacOptions ++= Seq(
     "-encoding", "UTF-8",
@@ -23,9 +23,9 @@ scalacOptions ++= Seq(
     "-explaintypes"
 )
 
-libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.0" % "test"
+libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 
-libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.11.2"
+libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.11.5"
 
 libraryDependencies += "junit" % "junit" % "4.8.1" % "test"
 

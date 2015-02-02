@@ -25,36 +25,26 @@ import com.aurelpaulovic.crdt.RDT
 class GCounterTest extends TestSpec {
 	import com.aurelpaulovic.crdt.replica.NamedReplica
 	
-	trait Replica {
-	  val replica = new NamedReplica("rep")
-	}
-	
-	trait MultiReplicas {
+	class MultiReplicas {
 	  val replicas = (for (i <- 1 to 5) yield new NamedReplica("rep" + i)).toList
 	  val id = "counter1"
 	  
   	val counters = replicas.map(GCounter[Int](id, _))
 	}
-	
-	trait Counter1 {
-	  this: Replica => 
-	    
-	  val c1 = GCounter[Int]("c1", replica)
-	}
-	
-	trait Counter2 {
-	  this: Replica => 
-	    
-	  val c2 = GCounter[Int]("c2", replica)
-	}
+  
+  def counter1: GCounter[Int] = GCounter[Int]("c1", new NamedReplica("rep"))
+  
+  def counter2: GCounter[Int] = GCounter[Int]("c2", new NamedReplica("rep"))
 	
 	"A GCounter" when {
 	  "initialized to zero" should {
-	    "have value 0" in new Counter1 with Replica {
+	    "have value 0" in {
+        val c1 = counter1
 	      assert(c1.value == 0)
 	    }
 	    
-	    "be comparable with itself" in new Counter1 with Replica {
+	    "be comparable with itself" in {
+        val c1 = counter1
 	      assert((c1 leq c1).value)
 	    }
 	  }
@@ -119,7 +109,7 @@ class GCounterTest extends TestSpec {
 	  }
 	  
 	  "having two replicas" should {
-	    "be mergable" in new MultiReplicas {
+	    "be mergable" in {
 	      def inner[T](c1: GCounter[T], c2: GCounter[T], sum: T) {
 	        assert(c1.merge(c2).isDefined)
 		      assert(c2.merge(c1).isDefined)
@@ -128,8 +118,9 @@ class GCounterTest extends TestSpec {
 		      assert(c2.merge(c1).map(_.value).value == sum)
 	      }
 	      
-	      val c1 = counters(0)
-	      val c2 = counters(1)
+        val mr = new MultiReplicas
+	      val c1 = mr.counters(0)
+	      val c2 = mr.counters(1)
 	      val c1_2 = (1 to 10).foldLeft(c1)((c, _) => c.increment)
 	      val c2_2 = (1 to 5).foldLeft(c2)((c, _) => c.increment)
 	      
@@ -142,7 +133,7 @@ class GCounterTest extends TestSpec {
 	      inner(c1, c2_2, 5)
 	    }
 
-	    "be comparable when non-empty" in new MultiReplicas {
+	    "be comparable when non-empty" in {
 	      def inner[T](c1: GCounter[T], c2: GCounter[T]) {
 	        assert(c1.leq(c2).value == false, s"c1: $c1 c2: $c2")
 		      assert(c2.leq(c1).value == false, s"c2: $c2 c1: $c1")
@@ -161,8 +152,9 @@ class GCounterTest extends TestSpec {
 		      assert(c21.leq(c12).value == true, s"c21: $c21 c12: $c12")
 	      }
 	      
-	      val c1 = counters(0).increment
-	      val c2 = counters(1).increment
+        val mr = new MultiReplicas
+	      val c1 = mr.counters(0).increment
+	      val c2 = mr.counters(1).increment
 	      
 	      inner(c1, c2)
 	      inner(c1.increment, c2)
@@ -175,9 +167,10 @@ class GCounterTest extends TestSpec {
 	      assert(c1.increment.leq(c1.increment).value == true)
 	    }
 	    
-	    "be comparable when at least one of them is empty" in new MultiReplicas {
-	      val c1 = counters(0)
-	      val c2 = counters(1)
+	    "be comparable when at least one of them is empty" in {
+        val mr = new MultiReplicas
+	      val c1 = mr.counters(0)
+	      val c2 = mr.counters(1)
 	      
 	      assert((c1 leq c2).value && (c2 leq c1).value)
 	      
@@ -189,7 +182,10 @@ class GCounterTest extends TestSpec {
 	  }
 	  
 	  "for two different counters" should {
-	    "be not mergable" in new Counter1 with Counter2 with Replica {
+	    "be not mergable" in {
+        val c1 = counter1
+        val c2 = counter2
+        
 	      def inner[T](c1: GCounter[T], c2: GCounter[T]) {
 	        assert(c1.merge(c2).isEmpty)
 	        assert(c2.merge(c1).isEmpty)
@@ -200,7 +196,10 @@ class GCounterTest extends TestSpec {
 	      inner(c1, c2.increment)
 	    }
 	    
-	    "be not comparable" in new Counter1 with Counter2 with Replica {
+	    "be not comparable" in {
+        val c1 = counter1
+        val c2 = counter2
+        
 	      def inner[T](c1: GCounter[T], c2: GCounter[T]) {
 	        assert(c1.leq(c2).isEmpty)
 	        assert(c2.leq(c1).isEmpty)

@@ -21,36 +21,29 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import com.aurelpaulovic.crdt.replica.NamedReplica
 import com.aurelpaulovic.crdt.RDT
+import com.aurelpaulovic.crdt.replica.Replica
 
 @RunWith(classOf[JUnitRunner])
 class PNCounterTest extends TestSpec {
-  trait Replica {
-	  val replica = new NamedReplica("rep")
-	}
-	
-	trait MultiReplicas {
+	class MultiReplicas {
 	  val replicas = (for (i <- 1 to 5) yield new NamedReplica("rep" + i)).toList
 	  val id = "counter1"
 	  
   	val counters = replicas.map(PNCounter[Int](id, _))
 	}
-	
-	trait Counter1 {
-	  this: Replica => 
-	    
-	  val c1 = PNCounter[Int]("c1", replica)
-	}
-	
-	trait Counter2 {
-	  this: Replica => 
-	    
-	  val c2 = PNCounter[Int]("c2", replica)
-	}
+  
+  def counter1: PNCounter[Int] = PNCounter[Int]("c1", replica)
+  
+  def counter2: PNCounter[Int] = PNCounter[Int]("c2", replica)
+  
+  def replica: Replica = new NamedReplica("rep")
   
   
 	"A PNCounter" when {
 	  "initialized to 0" should {
-	    "have value 0" in new Counter1 with Replica {
+	    "have value 0" in {
+        val c1 = counter1
+        
 	      assert(c1.value == 0)
 	      assert(c1.isZero)
 	      assert(c1.isNegative == false)
@@ -58,7 +51,7 @@ class PNCounterTest extends TestSpec {
 	  }
 	  
 	  "initialized to 100" should {
-	    "have value 100" in new Replica {
+	    "have value 100" in {
 	      val c = PNCounter("c1", replica, 100)
 	      assert(c.value == 100)
 	      assert(c.isZero == false)
@@ -68,7 +61,7 @@ class PNCounterTest extends TestSpec {
 	  
 	  "when decremented and/or incremented" should {
 	    "have correct value" in {
-	      var counter = PNCounter[Int]("counter", new NamedReplica("rep"))
+	      var counter = PNCounter[Int]("counter", replica)
 	      
 	      counter = counter.increment
 	      assert(counter.value == 1)
@@ -101,7 +94,7 @@ class PNCounterTest extends TestSpec {
 	      assert(counter.isNegative == false)
 	    }
 	    
-	    "have value 0 after set to zero" in new Replica {
+	    "have value 0 after set to zero" in {
 	      val c = PNCounter("c1", replica, 100) 
 	      assert(c.setToZero.value == 0)
 	      
@@ -112,7 +105,7 @@ class PNCounterTest extends TestSpec {
 	      assert(c3.setToZero.value == 0)
 	    }
 	    
-	    "have value 1 after set to one" in new Replica {
+	    "have value 1 after set to one" in {
 	      val c = PNCounter("c1", replica, 100) 
 	      assert(c.setToOne.value == 1)
 	      
@@ -125,7 +118,7 @@ class PNCounterTest extends TestSpec {
 	  }
 	  
 	  "having two replicas" should {
-	    "be mergable" in new MultiReplicas {
+	    "be mergable" in {
 	      def inner[T](c1: PNCounter[T], c2: PNCounter[T], sum: T) {
 	        assert(c1.merge(c2).isDefined)
 		      assert(c2.merge(c1).isDefined)
@@ -134,8 +127,9 @@ class PNCounterTest extends TestSpec {
 		      assert(c2.merge(c1).map(_.value).value == sum)
 	      }
 	      
-	      val c1 = counters(0)
-	      val c2 = counters(1)
+        val mr = new MultiReplicas
+	      val c1 = mr.counters(0)
+	      val c2 = mr.counters(1)
 	      val c1_2 = (1 to 10).foldLeft(c1)((c, _) => c.increment)
 	      val c2_2 = (1 to 5).foldLeft(c2)((c, _) => c.increment)
 	      val c1_3 = (1 to 5).foldLeft(c1_2)((c, _) => c.decrement)
@@ -152,7 +146,7 @@ class PNCounterTest extends TestSpec {
 	      inner(c1_3, c2_3, 2)
 	    }
 	    
-	    "be comparable" in new MultiReplicas {
+	    "be comparable" in {
 	      def inner[T](c1: PNCounter[T], c2: PNCounter[T]) {
 	        assert(c1.leq(c2).value == false)
 		      assert(c2.leq(c1).value == false)
@@ -171,8 +165,9 @@ class PNCounterTest extends TestSpec {
 		      assert(c21.leq(c12).value == true)
 	      }
 	      
-	      val c1 = counters(0).increment.increment
-	      val c2 = counters(1).increment.increment
+        val mr = new MultiReplicas
+	      val c1 = mr.counters(0).increment.increment
+	      val c2 = mr.counters(1).increment.increment
 	      
 	      inner(c1, c2)
 	      inner(c1.increment, c2)
@@ -187,22 +182,28 @@ class PNCounterTest extends TestSpec {
 	  }
 	  
 	  "for two different counters" should {
-	    "be not mergable" in new Counter1 with Counter2 with Replica {
+	    "be not mergable" in {
 	      def inner[T](c1: PNCounter[T], c2: PNCounter[T]) {
 	        assert(c1.merge(c2).isEmpty)
 	        assert(c2.merge(c1).isEmpty)
 	      }
+        
+        val c1 = counter1
+        val c2 = counter2
 	      
 	      inner(c1, c2)
 	      inner(c1.increment, c2)
 	      inner(c1, c2.increment)
 	    }
 	    
-	    "be not comparable" in new Counter1 with Counter2 with Replica {
+	    "be not comparable" in {
 	      def inner[T](c1: PNCounter[T], c2: PNCounter[T]) {
 	        assert(c1.leq(c2).isEmpty)
 	        assert(c2.leq(c1).isEmpty)
 	      }
+        
+        val c1 = counter1
+        val c2 = counter2
 	      
 	      inner(c1, c2)
 	      inner(c1.increment, c2)

@@ -25,7 +25,7 @@ case class TotalTimeClock[R <: Replica] private (val time: Long, val replica: R 
     case TotalTimeClock(_, _, otherTicks) => ticks.compare(otherTicks)
   }
   
-  def copyForReplica[R <: Replica](newReplica: R with Ordered[R]): TotalTimeClock[R] = TotalTimeClock(time, newReplica, ticks)
+  def copyForReplica[R2 <: Replica](newReplica: R2 with Ordered[R2]): TotalTimeClock[R2] = TotalTimeClock(time, newReplica, ticks)
   
   def makeGreaterThan(other: TotalTimeClock[R]): TotalTimeClock[R] = TotalTimeClock.makeGreaterThan(replica, other)
 }
