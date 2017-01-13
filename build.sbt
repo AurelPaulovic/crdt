@@ -4,12 +4,12 @@ lazy val mainProject = Project(id = "crdt", base = file(".")).
     name := "crdt",
     organization := "com.aurelpaulovic",
     version := "0.2-SNAPSHOT",
-    scalaVersion := "2.11.5",
+    scalaVersion := "2.12.1",
     licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0")),
     libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-reflect" % "2.11.5",
+      "org.scala-lang" % "scala-reflect" % "2.12.1",
       "junit" % "junit" % "4.8.1" % "test",
-      "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
+      "org.scalatest" %% "scalatest" % "3.0.1" % "test"
     ),
     publishMavenStyle := false,
     scalacOptions ++= Seq(

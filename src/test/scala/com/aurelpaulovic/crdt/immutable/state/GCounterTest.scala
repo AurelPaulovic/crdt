@@ -116,6 +116,7 @@ class GCounterTest extends TestSpec {
 		      
 		      assert(c1.merge(c2).map(_.value).value == sum)
 		      assert(c2.merge(c1).map(_.value).value == sum)
+					()
 	      }
 	      
         val mr = new MultiReplicas
@@ -150,6 +151,7 @@ class GCounterTest extends TestSpec {
 		      
 		      assert(c12.leq(c21).value == true, s"c12: $c12 c21: $c21")
 		      assert(c21.leq(c12).value == true, s"c21: $c21 c12: $c12")
+					()
 	      }
 	      
         val mr = new MultiReplicas
@@ -189,6 +191,7 @@ class GCounterTest extends TestSpec {
 	      def inner[T](c1: GCounter[T], c2: GCounter[T]) {
 	        assert(c1.merge(c2).isEmpty)
 	        assert(c2.merge(c1).isEmpty)
+					()
 	      }
 	      
 	      inner(c1, c2)
@@ -203,6 +206,7 @@ class GCounterTest extends TestSpec {
 	      def inner[T](c1: GCounter[T], c2: GCounter[T]) {
 	        assert(c1.leq(c2).isEmpty)
 	        assert(c2.leq(c1).isEmpty)
+					()
 	      }
 	      
 	      inner(c1, c2)
