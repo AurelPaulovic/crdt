@@ -17,12 +17,9 @@
 package com.aurelpaulovic.crdt.util
 
 import com.aurelpaulovic.crdt.TestSpec
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
 import com.aurelpaulovic.crdt.replica.NamedReplica._
 
-@RunWith(classOf[JUnitRunner])
 class VectorClockTest extends TestSpec {
 	"A VectorClock" when {
 	  "blank" should {

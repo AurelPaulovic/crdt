@@ -17,13 +17,10 @@
 package com.aurelpaulovic.crdt.immutable.state
 
 import com.aurelpaulovic.crdt.TestSpec
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import com.aurelpaulovic.crdt.replica.NamedReplica
 import com.aurelpaulovic.crdt.RDT
 import com.aurelpaulovic.crdt.replica.Replica
 
-@RunWith(classOf[JUnitRunner])
 class PNCounterTest extends TestSpec {
 	class MultiReplicas {
 	  val replicas = (for (i <- 1 to 5) yield new NamedReplica("rep" + i)).toList

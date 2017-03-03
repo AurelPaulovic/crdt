@@ -17,11 +17,8 @@
 package com.aurelpaulovic.crdt.immutable.state
 
 import com.aurelpaulovic.crdt.TestSpec
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import com.aurelpaulovic.crdt.RDT
 
-@RunWith(classOf[JUnitRunner])
 class GCounterTest extends TestSpec {
 	import com.aurelpaulovic.crdt.replica.NamedReplica
 	

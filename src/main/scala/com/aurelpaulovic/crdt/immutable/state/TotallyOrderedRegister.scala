@@ -18,8 +18,8 @@ package com.aurelpaulovic.crdt.immutable.state
 
 import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.Id
-import com.aurelpaulovic.crdt.util.TotalOrdering
 import com.aurelpaulovic.crdt.util.TotalTimeClock
+
 import scala.reflect.runtime.universe._
 
 class TotallyOrderedRegister[T, R <: Replica] private (val id: Id, private[this] val pReplica: R with Ordered[R], val value: T, protected val clock: TotalTimeClock[R])(implicit paramType: TypeTag[T]) extends CRDT[T, TotallyOrderedRegister[T,R]] {

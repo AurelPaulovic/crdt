@@ -17,14 +17,11 @@
 package com.aurelpaulovic.crdt.immutable.state
 
 import com.aurelpaulovic.crdt.TestSpec
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import com.aurelpaulovic.crdt.replica.NamedReplica._
 import com.aurelpaulovic.crdt.util.Mergeable
 import com.aurelpaulovic.crdt.replica.NamedReplica
 import com.aurelpaulovic.crdt.RDT
 
-@RunWith(classOf[JUnitRunner])
 class MergeableRegisterTest extends TestSpec {
   import Mergeable._
   

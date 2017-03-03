@@ -18,6 +18,7 @@ package com.aurelpaulovic.crdt
 
 import scala.reflect.runtime.universe._
 
+
 trait RdtTypeEqual {
   protected def canRdtTypeEqual[X : TypeTag](other: Any): Boolean
 
