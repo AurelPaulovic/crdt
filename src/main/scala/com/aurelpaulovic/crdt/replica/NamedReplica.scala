@@ -22,11 +22,11 @@ class NamedReplica (val name: String) extends Replica with Ordered[NamedReplica]
   override def toString = s"NamedReplica($name)"
 
   def canEqual(other: Any) = {
-    other.isInstanceOf[com.aurelpaulovic.crdt.replica.NamedReplica]
+    other.isInstanceOf[NamedReplica]
   }
 
   override def equals(other: Any) = other match {
-    case that: com.aurelpaulovic.crdt.replica.NamedReplica => that.canEqual(NamedReplica.this) && name == that.name
+    case that: NamedReplica => that.canEqual(NamedReplica.this) && name == that.name
     case _ => false
   }
 

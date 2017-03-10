@@ -28,12 +28,12 @@ class ThreadReplica extends Replica with Ordered[ThreadReplica] with Equals {
   def compare(other: ThreadReplica): Int = id.compare(other.id)
     
   override def equals(other: Any): Boolean = other match {
-    case that: com.aurelpaulovic.crdt.replica.ThreadReplica => that.canEqual(ThreadReplica.this) && id == that.id
+    case that: ThreadReplica => that.canEqual(ThreadReplica.this) && id == that.id
     case _ => false
   }
 
   def canEqual(other: Any) = {
-    other.isInstanceOf[com.aurelpaulovic.crdt.replica.ThreadReplica]
+    other.isInstanceOf[ThreadReplica]
   }
 
   override def hashCode() = 41 + id.hashCode
