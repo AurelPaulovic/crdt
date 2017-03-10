@@ -16,15 +16,15 @@
 
 package com.aurelpaulovic.crdt
 
-trait Id
+trait Id extends Serializable
 
 case class StringId(id: String) extends Id
 case class IntegerId(id: Int) extends Id
 
 object Id {
-  implicit final def StringId(id: String) = new StringId(id)
-  implicit final def IntegerId(id: Int) = new IntegerId(id)
-  
-  def apply(id: String) = new StringId(id)
-  def apply(id: Int) = new IntegerId(id)
+  implicit def toStringId(id: String): StringId = StringId(id)
+  implicit def toIntegerId(id: Int): IntegerId = IntegerId(id)
+
+  def apply(id: String) = StringId(id)
+  def apply(id: Int) = IntegerId(id)
 }
