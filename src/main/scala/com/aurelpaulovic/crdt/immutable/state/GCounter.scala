@@ -16,11 +16,10 @@
 
 package com.aurelpaulovic.crdt.immutable.state
 
-import com.aurelpaulovic.crdt.replica.Replica
-import scala.collection.immutable
 import com.aurelpaulovic.crdt.Id
+import com.aurelpaulovic.crdt.replica.Replica
+
 import scala.reflect.runtime.universe._
-import scala.reflect.ClassTag
 
 class GCounter[T] private (val id: Id, val replica: Replica, private val counter: component.GCounter[T])(implicit num: Numeric[T], paramType: TypeTag[T]) extends CRDT[T, GCounter[T]] {
   def this(id: Id, replica: Replica)(implicit num: Numeric[T], paramType: TypeTag[T]) = this(id, replica, component.GCounter(replica))
@@ -41,12 +40,12 @@ class GCounter[T] private (val id: Id, val replica: Replica, private val counter
     else None
   }
   
-  protected def canRdtTypeEqual[X: TypeTag](other: Any) = {
-    typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.GCounter[_]]
+  protected def canRdtTypeEqual[OTHER: TypeTag](other: Any) = {
+    typeOf[OTHER] == typeOf[T] && other.isInstanceOf[GCounter[_]]
   }
 
   def rdtTypeEquals(other: Any) = other match {
-    case that: com.aurelpaulovic.crdt.immutable.state.GCounter[_] => that canRdtTypeEqual this
+    case that: GCounter[_] => that.canRdtTypeEqual[T](this)
     case _ => false
   }
   

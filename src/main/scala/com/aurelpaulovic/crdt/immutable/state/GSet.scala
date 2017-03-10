@@ -20,40 +20,40 @@ import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.Id
 import scala.reflect.runtime.universe._
 
-class GSet[T] private (val id: Id, val replica: Replica, val elements: component.GSet[T])(implicit paramType: TypeTag[T]) extends CRDT[Set[T], GSet[T]] {
-  def value(): Set[T] = elements.value
+class GSet[E] private (val id: Id, val replica: Replica, val elements: component.GSet[E])(implicit paramType: TypeTag[E]) extends CRDT[Set[E], GSet[E]] {
+  def value(): Set[E] = elements.value
   
-  def add(ele: T): GSet[T] = {
+  def add(ele: E): GSet[E] = {
     if (elements.contains(ele)) this
-    else new GSet[T](id, replica, elements.add(ele))
+    else new GSet[E](id, replica, elements.add(ele))
   }
   
   def isEmpty(): Boolean = elements.isEmpty
   
   def size(): Int = elements.size
   
-  def contains(ele: T): Boolean = elements.contains(ele)
+  def contains(ele: E): Boolean = elements.contains(ele)
   
-  def merge(other: GSet[T]): Option[GSet[T]] = {
+  def merge(other: GSet[E]): Option[GSet[E]] = {
     if (other.id == id) Some(new GSet(id, replica, elements /+\ other.elements))
     else None
   }
   
-  def leq(other: GSet[T]): Option[Boolean] = {
+  def leq(other: GSet[E]): Option[Boolean] = {
     if (other.id == id) Some(elements isDominatedBy other.elements)
     else None
   }
   
-  protected def canRdtTypeEqual[X: TypeTag](other: Any) = {
-    typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.GSet[_]]
+  protected def canRdtTypeEqual[OTHER: TypeTag](other: Any) = {
+    typeOf[OTHER] == typeOf[E] && other.isInstanceOf[GSet[_]]
   }
 
   def rdtTypeEquals(other: Any) = other match {
-    case that: com.aurelpaulovic.crdt.immutable.state.GSet[_] => that canRdtTypeEqual this
+    case that: GSet[_] => that.canRdtTypeEqual[E](this)
     case _ => false
   }
   
-  def copyForReplica(newReplica: Replica): GSet[T] = new GSet[T](id, newReplica, elements)
+  def copyForReplica(newReplica: Replica): GSet[E] = new GSet[E](id, newReplica, elements)
   
   override def toString(): String = s"GSet($id, $replica) with elements ${elements.value}"
 }

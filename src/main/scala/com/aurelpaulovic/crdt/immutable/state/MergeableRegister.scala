@@ -22,12 +22,12 @@ import com.aurelpaulovic.crdt.util.VectorClock
 import com.aurelpaulovic.crdt.util.Mergeable
 import scala.reflect.runtime.universe._
 
-class MergeableRegister[T: Mergeable] private (val id: Id, val replica: Replica, val value: T, protected val clock: VectorClock)(implicit paramType: TypeTag[T]) extends CRDT[T, MergeableRegister[T]] {
+class MergeableRegister[E: Mergeable] private (val id: Id, val replica: Replica, val value: E, protected val clock: VectorClock)(implicit paramType: TypeTag[E]) extends CRDT[E, MergeableRegister[E]] {
   import Mergeable._
   
-	def assign(value: T): MergeableRegister[T] = new MergeableRegister(id, replica, value, clock.increment)
+	def assign(value: E): MergeableRegister[E] = new MergeableRegister(id, replica, value, clock.increment)
   
-	def merge(other: MergeableRegister[T]): Option[MergeableRegister[T]] = other.id match {
+	def merge(other: MergeableRegister[E]): Option[MergeableRegister[E]] = other.id match {
 	  case `id` => 
 	    if 			(other.clock > clock)		Some(other) // this register has older value, the other register has seen our value
 		  else if (other.clock <= clock)	Some(this)	// this register is newer and has seen the other register's value or the registers are equal
@@ -38,21 +38,21 @@ class MergeableRegister[T: Mergeable] private (val id: Id, val replica: Replica,
 	  case _ => None
 	}
   
-	def leq(other: MergeableRegister[T]): Option[Boolean] = other.id match {
+	def leq(other: MergeableRegister[E]): Option[Boolean] = other.id match {
 	  case `id` => Some(clock <= other.clock)
 	  case _ => None
 	}
 	
-	protected def canRdtTypeEqual[X: TypeTag](other: Any) = {
-    typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.MergeableRegister[_]]
+	protected def canRdtTypeEqual[OTHER: TypeTag](other: Any) = {
+    typeOf[OTHER] == typeOf[E] && other.isInstanceOf[MergeableRegister[_]]
   }
 
   def rdtTypeEquals(other: Any) = other match {
-    case that: com.aurelpaulovic.crdt.immutable.state.MergeableRegister[T] => that canRdtTypeEqual this
+    case that: MergeableRegister[E] => that.canRdtTypeEqual[E](this)
     case _ => false
   }
   
-  def copyForReplica(newReplica: Replica): MergeableRegister[T] = new MergeableRegister(id, newReplica, value, clock.copyForReplica(newReplica))
+  def copyForReplica(newReplica: Replica): MergeableRegister[E] = new MergeableRegister(id, newReplica, value, clock.copyForReplica(newReplica))
 	
 	override def toString(): String = s"MergeableRegister($value)"
 }

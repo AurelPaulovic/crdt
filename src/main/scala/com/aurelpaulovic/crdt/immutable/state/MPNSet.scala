@@ -22,24 +22,24 @@ import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.Id
 import scala.reflect.runtime.universe._
 
-class MPNSet[T] private (val id: Id, val replica: Replica, private val clock: component.GCounter[Long], private val elements: immutable.Map[T, component.PNCounter[Int]])(implicit paramType: TypeTag[T]) extends CRDT[Set[T], MPNSet[T]] {
-	def value(): Set[T] = (elements.collect{case (ele, counter) if elementExists(counter) => ele}).toSet
+class MPNSet[E] private (val id: Id, val replica: Replica, private val clock: component.GCounter[Long], private val elements: immutable.Map[E, component.PNCounter[Int]])(implicit paramType: TypeTag[E]) extends CRDT[Set[E], MPNSet[E]] {
+	def value(): Set[E] = (elements.collect{case (ele, counter) if elementExists(counter) => ele}).toSet
   
-  def add(ele: T): MPNSet[T] = elements.get(ele) match {
+  def add(ele: E): MPNSet[E] = elements.get(ele) match {
 	  case None => new MPNSet(id, replica, clock.increment, elements + newElement(ele))
 	  case Some(counter) if elementExists(counter) => this
 	  case Some(counter) => new MPNSet(id, replica, clock.increment, elements.updated(ele, counter.setToOne))
 	}
 	
-	private def newElement(ele: T): (T, component.PNCounter[Int]) = (ele, component.PNCounter(replica, 1))
+	private def newElement(ele: E): (E, component.PNCounter[Int]) = (ele, component.PNCounter(replica, 1))
 	
-	def remove(ele: T): MPNSet[T] = elements.get(ele) match {
+	def remove(ele: E): MPNSet[E] = elements.get(ele) match {
 	  case None => this
 	  case Some(counter) if !elementExists(counter) => this
 	  case Some(counter) => new MPNSet(id, replica, clock.increment, elements.updated(ele, counter.setToZero))
 	}
 	
-	def contains(ele: T): Boolean = elements.get(ele) match {
+	def contains(ele: E): Boolean = elements.get(ele) match {
 		case Some(counter) => elementExists(counter)
 	  case None => false
 	}
@@ -53,7 +53,7 @@ class MPNSet[T] private (val id: Id, val replica: Replica, private val clock: co
 	
 	private def elementExists(counter: component.PNCounter[Int]): Boolean = counter.value > counter.zero
 	
-	def merge(other: MPNSet[T]): Option[MPNSet[T]] = other.id match {
+	def merge(other: MPNSet[E]): Option[MPNSet[E]] = other.id match {
 	  case `id` => 
 	    val mergedElements = elements ++ ( 
 	    		for {
@@ -69,22 +69,22 @@ class MPNSet[T] private (val id: Id, val replica: Replica, private val clock: co
 	  case _ => None
 	}
 
-	def leq(other: MPNSet[T]): Option[Boolean] = other.id match {
+	def leq(other: MPNSet[E]): Option[Boolean] = other.id match {
 	  case `id` =>
 	    Some(clock isDominatedBy other.clock)
 	  case _ => None
 	}
 	
-	protected def canRdtTypeEqual[X: TypeTag](other: Any) = {
-    typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.MPNSet[_]]
+	protected def canRdtTypeEqual[OTHER: TypeTag](other: Any) = {
+    typeOf[OTHER] == typeOf[E] && other.isInstanceOf[MPNSet[_]]
   }
 
   def rdtTypeEquals(other: Any) = other match {
-    case that: com.aurelpaulovic.crdt.immutable.state.MPNSet[T] => that canRdtTypeEqual this
+    case that: MPNSet[E] => that.canRdtTypeEqual[E](this)
     case _ => false
   }
   
-  def copyForReplica(newReplica: Replica): MPNSet[T] = new MPNSet[T](id, newReplica, clock.copyForReplica(newReplica), elements.mapValues(_.copyForReplica(newReplica)))
+  def copyForReplica(newReplica: Replica): MPNSet[E] = new MPNSet[E](id, newReplica, clock.copyForReplica(newReplica), elements.mapValues(_.copyForReplica(newReplica)))
 	
 	override def toString(): String = s"MPNSet($id, $replica, $clock, $elements)"
 }

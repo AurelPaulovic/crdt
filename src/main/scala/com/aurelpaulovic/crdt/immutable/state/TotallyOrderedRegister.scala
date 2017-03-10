@@ -22,33 +22,33 @@ import com.aurelpaulovic.crdt.util.TotalTimeClock
 
 import scala.reflect.runtime.universe._
 
-class TotallyOrderedRegister[T, R <: Replica] private (val id: Id, private[this] val pReplica: R with Ordered[R], val value: T, protected val clock: TotalTimeClock[R])(implicit paramType: TypeTag[T]) extends CRDT[T, TotallyOrderedRegister[T,R]] {
+class TotallyOrderedRegister[E, R <: Replica] private (val id: Id, private[this] val pReplica: R with Ordered[R], val value: E, protected val clock: TotalTimeClock[R])(implicit paramType: TypeTag[E]) extends CRDT[E, TotallyOrderedRegister[E,R]] {
   val replica: Replica = pReplica
   
-  def assign(value: T): TotallyOrderedRegister[T, R] = new TotallyOrderedRegister(id, pReplica, value, TotalTimeClock.makeGreaterThan(pReplica, clock))
+  def assign(value: E): TotallyOrderedRegister[E, R] = new TotallyOrderedRegister(id, pReplica, value, TotalTimeClock.makeGreaterThan(pReplica, clock))
 	
-	def merge(other: TotallyOrderedRegister[T, R]): Option[TotallyOrderedRegister[T, R]] = other.id match {
+	def merge(other: TotallyOrderedRegister[E, R]): Option[TotallyOrderedRegister[E, R]] = other.id match {
 	  case `id` => 
 	  	if (clock >= other.clock) Some(this)
 	  	else Some(new TotallyOrderedRegister(id, pReplica, other.value, other.clock))
 	  case _ => None
 	}
 	
-	def leq(other: TotallyOrderedRegister[T, R]): Option[Boolean] = other.id match {
+	def leq(other: TotallyOrderedRegister[E, R]): Option[Boolean] = other.id match {
 	  case `id` => Some(clock <= other.clock)
 	  case _ => None
 	}
 	
-	protected def canRdtTypeEqual[X: TypeTag](other: Any) = {
-    typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.TotallyOrderedRegister[_,_]]
+	protected def canRdtTypeEqual[OTHER: TypeTag](other: Any) = {
+    typeOf[OTHER] == typeOf[E] && other.isInstanceOf[TotallyOrderedRegister[_,_]]
   }
 
   def rdtTypeEquals(other: Any) = other match {
-    case that: com.aurelpaulovic.crdt.immutable.state.TotallyOrderedRegister[T, R] => that canRdtTypeEqual this
+    case that: TotallyOrderedRegister[E, R] => that.canRdtTypeEqual[E](this)
     case _ => false
   }
   
-  def copyForReplica(newReplica: Replica): TotallyOrderedRegister[T, R] = // can throw cast exception
+  def copyForReplica(newReplica: Replica): TotallyOrderedRegister[E, R] = // can throw cast exception
     new TotallyOrderedRegister(id, newReplica.asInstanceOf[R with Ordered[R]], value, clock.copyForReplica(newReplica.asInstanceOf[R with Ordered[R]]))
 	
 	override def toString = s"TotallyOrderedRegister($value)"

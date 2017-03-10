@@ -21,20 +21,20 @@ import com.aurelpaulovic.crdt.replica.Replica
 import scala.collection.immutable
 import scala.reflect.runtime.universe._
 
-class COSet[T] private (val id: Id, val replica: Replica, private val clock: component.GCounter[Long], private val elements: Map[T, component.GCounter[Long]])(implicit paramType: TypeTag[T]) extends CRDT[Set[T], COSet[T]] {
-	def value(): Set[T] = elements.keySet
+class COSet[E] private (val id: Id, val replica: Replica, private val clock: component.GCounter[Long], private val elements: Map[E, component.GCounter[Long]])(implicit paramType: TypeTag[E]) extends CRDT[Set[E], COSet[E]] {
+	def value(): Set[E] = elements.keySet
   
-  def add(ele: T): COSet[T] = {
+  def add(ele: E): COSet[E] = {
 	  if (elements.contains(ele)) this
-	  else new COSet[T](id, replica, clock.increment, elements + (ele -> clock.increment))
+	  else new COSet[E](id, replica, clock.increment, elements + (ele -> clock.increment))
 	}
 	
-	def remove(ele: T): COSet[T] = {
-	  if (elements.contains(ele)) new COSet[T](id, replica, clock.increment, elements - ele) 
+	def remove(ele: E): COSet[E] = {
+	  if (elements.contains(ele)) new COSet[E](id, replica, clock.increment, elements - ele)
 	  else this
 	}
 	
-	def contains(ele: T): Boolean = elements.contains(ele)
+	def contains(ele: E): Boolean = elements.contains(ele)
 	
 	def isEmpty(): Boolean = elements.isEmpty
 	
@@ -42,11 +42,11 @@ class COSet[T] private (val id: Id, val replica: Replica, private val clock: com
 	
 	def size(): Int = sizeCache
 	
-	def merge(other: COSet[T]): Option[COSet[T]] = { 
+	def merge(other: COSet[E]): Option[COSet[E]] = {
 	  if (id == other.id) {
 		  (clock /<=\ other.clock, other.clock /<=\ clock) match {
 			  case (true, true) => Some(this) // this == other
-			  case (true, false) => Some(new COSet[T](id, replica, clock /+\ other.clock, other.elements)) // this < other
+			  case (true, false) => Some(new COSet[E](id, replica, clock /+\ other.clock, other.elements)) // this < other
 			  case (false, true) => Some(this) // this > other
 			  case (false, false) =>
 			    //1. take elements present in both sets and merge their tags
@@ -58,26 +58,26 @@ class COSet[T] private (val id: Id, val replica: Replica, private val clock: com
 			    //3. take elements that present only in other and are concurrent with current clock in this
 			    val newOtherElements = (other.elements -- elements.keys).filter{ case (_, tag) => tag /~\ clock }
 			     
-			    Some(new COSet[T](id, replica, clock /+\ other.clock, sharedElements ++ newThisElements ++ newOtherElements))// concurrent
+			    Some(new COSet[E](id, replica, clock /+\ other.clock, sharedElements ++ newThisElements ++ newOtherElements))// concurrent
 			}
 		} else None
 	}
 	
-	def leq(other: COSet[T]): Option[Boolean] = {
+	def leq(other: COSet[E]): Option[Boolean] = {
 	  if (id == other.id) Some(clock isDominatedBy other.clock)
 	  else None
 	}
 	
-	protected def canRdtTypeEqual[X: TypeTag](other: Any) = {
-    typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.COSet[_]]
+	protected def canRdtTypeEqual[OTHER: TypeTag](other: Any) = {
+    typeOf[OTHER] == typeOf[E] && other.isInstanceOf[COSet[_]]
   }
 
   def rdtTypeEquals(other: Any) = other match {
-    case that: com.aurelpaulovic.crdt.immutable.state.COSet[_] => that canRdtTypeEqual this
+    case that: COSet[_] => that.canRdtTypeEqual[E](this)
     case _ => false
   }
   
-  def copyForReplica(newReplica: Replica): COSet[T] = new COSet[T](id, newReplica, clock.copyForReplica(newReplica), elements.mapValues(_.copyForReplica(newReplica)))
+  def copyForReplica(newReplica: Replica): COSet[E] = new COSet[E](id, newReplica, clock.copyForReplica(newReplica), elements.mapValues(_.copyForReplica(newReplica)))
 	
 	override def toString(): String = s"COSet($id, $replica, $clock) with elements ${elements.keys}" 
 }

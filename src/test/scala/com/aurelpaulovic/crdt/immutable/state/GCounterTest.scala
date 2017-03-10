@@ -231,7 +231,7 @@ class GCounterTest extends TestSpec {
         assert(rdt2.rdtTypeEquals(rdt1))
       }
       
-      "be different if the are of the same CRDT type but have different type parameter" in {
+      "be different if they are of the same CRDT type but have different type parameter" in {
         val rep = NamedReplica("rep1")
         val rdt1 = GCounter[Int]("id1", rep).asInstanceOf[RDT]
         val rdt2 = GCounter[Long]("id2", rep).asInstanceOf[RDT]

@@ -16,12 +16,12 @@
 
 package com.aurelpaulovic.crdt.immutable.state
 
-import com.aurelpaulovic.crdt.replica.Replica
 import com.aurelpaulovic.crdt.Id
+import com.aurelpaulovic.crdt.replica.Replica
+
 import scala.reflect.runtime.universe._
 
 class PNCounter[T] private (val id: Id, val replica: Replica, private val counter: component.PNCounter[T])(implicit num: Numeric[T], paramType: TypeTag[T]) extends CRDT[T, PNCounter[T]] {
-  import num._
 
   def this(id: Id, replica: Replica)(implicit num: Numeric[T], paramType: TypeTag[T]) = this(id, replica, component.PNCounter[T](replica))
 
@@ -58,12 +58,12 @@ class PNCounter[T] private (val id: Id, val replica: Replica, private val counte
     else None
   }
   
-  protected def canRdtTypeEqual[X: TypeTag](other: Any) = {
-    typeOf[X] == typeOf[T] && other.isInstanceOf[com.aurelpaulovic.crdt.immutable.state.PNCounter[_]]
+  protected def canRdtTypeEqual[OTHER: TypeTag](other: Any) = {
+    typeOf[OTHER] == typeOf[T] && other.isInstanceOf[PNCounter[_]]
   }
 
   def rdtTypeEquals(other: Any) = other match {
-    case that: com.aurelpaulovic.crdt.immutable.state.PNCounter[_] => that canRdtTypeEqual this
+    case that: PNCounter[_] => that.canRdtTypeEqual[T](this)
     case _ => false
   }
   
